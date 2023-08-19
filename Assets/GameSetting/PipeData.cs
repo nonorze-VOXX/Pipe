@@ -7,5 +7,7 @@ namespace GameSetting
     {
         public Vector2 mapSize;
         public int puzzleType;
+        public Vector3 boardLeftDown;
+        public Vector3 pipeSize;
     }
 }
