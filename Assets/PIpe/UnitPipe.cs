@@ -4,6 +4,7 @@ namespace Pipe
 {
     public class UnitPipe
     {
+        public bool choosed;
         public List<bool> connections;
 
         public bool generated;
@@ -17,6 +18,7 @@ namespace Pipe
             connections.Add(false);
             connections.Add(false);
             generated = false;
+            choosed = false;
             // neighbors = new List<Vector2>();
         }
     }

@@ -12,14 +12,12 @@ namespace Pipe
 
         private void Awake()
         {
-            print("pipeline awake");
             _pipeLine = new List<GameObject>();
             _pipeLine.Add(transform.GetChild(0).GameObject());
         }
 
         private void Start()
         {
-            print("pipeline start");
             var angle = 360 / _puzzleType;
             for (var i = 1; i < _puzzleType; i++)
             {
@@ -34,7 +32,6 @@ namespace Pipe
 
         public void SetPuzzleType(int line)
         {
-            print("set");
             _puzzleType = line;
         }
 
