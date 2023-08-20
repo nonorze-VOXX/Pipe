@@ -8,12 +8,22 @@ namespace Pipe
     {
         [SerializeField] private PipeData pipeData;
         [SerializeField] private GameObject pipePrefab;
+        private readonly List<Vector2> iToV2 = new();
+        private readonly Dictionary<Vector2, int> V2ToIndex = new();
         private List<List<UnitPipe>> _pipe2D;
 
         private void Awake()
         {
+            iToV2.Add(Vector2.right);
+            iToV2.Add(Vector2.up);
+            iToV2.Add(Vector2.left);
+            iToV2.Add(Vector2.down);
+            V2ToIndex.Add(Vector2.right, 0);
+            V2ToIndex.Add(Vector2.up, 1);
+            V2ToIndex.Add(Vector2.left, 2);
+            V2ToIndex.Add(Vector2.down, 3);
             _pipe2D = new List<List<UnitPipe>>();
-            for (var y = 0; y < pipeData.mapSize.x; y++)
+            for (var y = 0; y < pipeData.mapSize.y; y++)
             {
                 var pipe1D = new List<UnitPipe>();
                 for (var x = 0; x < pipeData.mapSize.x; x++) pipe1D.Add(new UnitPipe());
@@ -24,7 +34,7 @@ namespace Pipe
         private void Start()
         {
             var init = new Vector2(Random.Range(0, (int)pipeData.mapSize.x - 1),
-                Random.Range(0, (int)pipeData.mapSize.x - 1));
+                Random.Range(0, (int)pipeData.mapSize.y - 1));
             // var init = new Vector2(1, 1);
             _pipe2D = GenerateMap(_pipe2D, init, pipeData.puzzleType);
             for (var y = 0; y < _pipe2D.Count; y++)
@@ -56,57 +66,53 @@ namespace Pipe
 
         private List<List<UnitPipe>> GenerateMap(List<List<UnitPipe>> pipe2D, Vector2 init, int PuzzleType)
         {
-            List<Vector2> iToV2 = new();
-            iToV2.Add(Vector2.right);
-            iToV2.Add(Vector2.up);
-            iToV2.Add(Vector2.left);
-            iToV2.Add(Vector2.down);
-            Queue<Vector2> processing = new();
-            processing.Enqueue(init);
-            while (processing.Count != 0)
+            var visted = new List<Vector2>();
+            var candidate = new List<Vector2>();
+            candidate.Add(init);
+            while (candidate.Count != 0)
             {
-                var now = processing.Dequeue();
-                Debug.Log(now);
-                if (Get2DArrByVector2(pipe2D, now).generated) continue;
-
-                var ran = Random.Range(2, (int)Mathf.Pow(2, PuzzleType + 1));
-                //0 right
-                //1 up
-                //2 left
-                //3 down
-                for (var i = 0; i < 4; i++)
+                var ran = Random.Range(0, candidate.Count);
+                var next = candidate[ran];
+                candidate.RemoveRange(ran, 1);
+                visted.Add(next);
+                List<Vector2> connectCandidate = new();
+                // foreach (var c in visted) Debug.Log(c);
+                foreach (var dir in iToV2)
                 {
-                    ran = ran >> 1;
-                    if (!InMap(now + iToV2[i], pipe2D.Count, pipe2D[0].Count)) continue;
-                    if (Get2DArrByVector2(pipe2D, now + iToV2[i]).generated) continue;
-                    if (Get2DArrByVector2(pipe2D, now + iToV2[i]).choosed) continue;
-                    if (ran % 2 == 1 && !Get2DArrByVector2(pipe2D, now + iToV2[i]).generated)
-                    {
-                        Get2DArrByVector2(pipe2D, now).connections[i] = true;
-                        Get2DArrByVector2(pipe2D, now + iToV2[i]).connections[(PuzzleType / 2 + i) % PuzzleType] = true;
-                        Get2DArrByVector2(pipe2D, now + iToV2[i]).choosed = true;
+                    if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
 
-                        processing.Enqueue(now + iToV2[i]);
+                    if (visted.Contains(next + dir))
+                    {
+                        connectCandidate.Add(dir);
                     }
                     else
                     {
-                        Get2DArrByVector2(pipe2D, now).connections[i] = false;
+                        if (!candidate.Contains(next + dir)) candidate.Add(next + dir);
                     }
                 }
 
-                foreach (var c in Get2DArrByVector2(pipe2D, now).connections) Debug.Log(c);
-                Get2DArrByVector2(pipe2D, now).choosed = true;
-                Get2DArrByVector2(pipe2D, now).generated = true;
+                if (connectCandidate.Count != 0)
+                {
+                    var ranConnection = Random.Range(0, connectCandidate.Count);
+                    ConnectPipeByDirection(pipe2D, next, connectCandidate[ranConnection], PuzzleType);
+                }
             }
+
 
             return pipe2D;
         }
 
-        private bool InMap(Vector2 now, int y, int x)
+        private void ConnectPipeByDirection(List<List<UnitPipe>> pipe2D, Vector2 next, Vector2 dir, int puzzleType)
         {
-            return now.x < x &&
+            Get2DArrByVector2(pipe2D, next).connections[V2ToIndex[dir]] = true;
+            Get2DArrByVector2(pipe2D, next + dir).connections[(puzzleType / 2 + V2ToIndex[dir]) % puzzleType] = true;
+        }
+
+        private bool InMap(Vector2 now, Vector2 mapSize)
+        {
+            return now.x < mapSize.x &&
                    now.x >= 0 &&
-                   now.y < y &&
+                   now.y < mapSize.y &&
                    now.y >= 0;
         }
 
