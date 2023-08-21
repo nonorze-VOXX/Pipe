@@ -40,7 +40,9 @@ namespace Pipe
         private void Start()
         {
             _camera = Camera.main;
-            // _camera.
+            _camera.transform.position = new Vector3(pipeData.pipeSize.x * pipeData.mapSize.x,
+                pipeData.pipeSize.y * pipeData.mapSize.y, -20) / 2;
+
             _pipeGameObjects = new List<List<UnitPipeGameObject>>();
             _pipe2D = new List<List<UnitPipe>>();
             for (var y = 0; y < pipeData.mapSize.y; y++)
@@ -90,6 +92,10 @@ namespace Pipe
                     _gameFlow = GameFlow.PLAYING;
                     break;
                 case GameFlow.PLAYING:
+                    float orthographicSize;
+                    var cameraSize = new Vector2(_camera.aspect * (orthographicSize = _camera.orthographicSize * 2),
+                        orthographicSize);
+                    _camera.orthographicSize = GetCameraSize(pipeData.mapSize, cameraSize, _camera.aspect);
                     break;
                 case GameFlow.WIN:
                     break;
@@ -98,12 +104,19 @@ namespace Pipe
             }
         }
 
+        private float GetCameraSize(Vector2 mapSize, Vector2 cameraSize, float cameraAspect)
+        {
+            if (cameraSize.x > cameraSize.y)
+                return mapSize.y / 2;
+            return mapSize.x / cameraAspect / 2;
+        }
+
         private Vector3 GetPipePositon(Vector3 pipeDataBoardLeftDown, Vector3 pipeSize, Vector3 index)
         {
             return new Vector3(
-                pipeDataBoardLeftDown.x + index.x * pipeSize.x,
-                pipeDataBoardLeftDown.y + index.y * pipeSize.y,
-                pipeDataBoardLeftDown.z + index.z * pipeSize.z
+                pipeDataBoardLeftDown.x + index.x * pipeSize.x + pipeSize.x / 2,
+                pipeDataBoardLeftDown.y + index.y * pipeSize.y + pipeSize.y / 2,
+                pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
             );
         }
 
