@@ -4,11 +4,7 @@ namespace Pipe
 {
     public class UnitPipe
     {
-        public bool choosed;
         public List<bool> connections;
-
-        public bool generated;
-        // public List<Vector2> neighbors;
 
         public UnitPipe()
         {
@@ -17,9 +13,16 @@ namespace Pipe
             connections.Add(false);
             connections.Add(false);
             connections.Add(false);
-            generated = false;
-            choosed = false;
-            // neighbors = new List<Vector2>();
+        }
+
+        public int GetNumOfConnection()
+        {
+            var ans = 0;
+            foreach (var c in connections)
+                if (c)
+                    ans++;
+
+            return ans;
         }
     }
 }

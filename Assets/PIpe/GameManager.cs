@@ -22,6 +22,11 @@ namespace Pipe
             V2ToIndex.Add(Vector2.up, 1);
             V2ToIndex.Add(Vector2.left, 2);
             V2ToIndex.Add(Vector2.down, 3);
+        }
+
+        private void Start()
+        {
+            // var init = new Vector2(1, 1);
             _pipe2D = new List<List<UnitPipe>>();
             for (var y = 0; y < pipeData.mapSize.y; y++)
             {
@@ -29,14 +34,11 @@ namespace Pipe
                 for (var x = 0; x < pipeData.mapSize.x; x++) pipe1D.Add(new UnitPipe());
                 _pipe2D.Add(pipe1D);
             }
-        }
 
-        private void Start()
-        {
             var init = new Vector2(Random.Range(0, (int)pipeData.mapSize.x - 1),
                 Random.Range(0, (int)pipeData.mapSize.y - 1));
-            // var init = new Vector2(1, 1);
             _pipe2D = GenerateMap(_pipe2D, init, pipeData.puzzleType);
+
             for (var y = 0; y < _pipe2D.Count; y++)
             {
                 var pipe1D = _pipe2D[y];
@@ -69,25 +71,29 @@ namespace Pipe
             var visted = new List<Vector2>();
             var candidate = new List<Vector2>();
             candidate.Add(init);
+            var times = 0;
+            visted.Add(init);
             while (candidate.Count != 0)
             {
+                times++; //for save
+                if (times > pipe2D[0].Count * pipe2D.Count * 3) break;
                 var ran = Random.Range(0, candidate.Count);
                 var next = candidate[ran];
                 candidate.RemoveRange(ran, 1);
-                visted.Add(next);
                 List<Vector2> connectCandidate = new();
                 // foreach (var c in visted) Debug.Log(c);
                 foreach (var dir in iToV2)
                 {
                     if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
 
-                    if (visted.Contains(next + dir))
+                    if (visted.Contains(next + dir) &&
+                        Get2DArrByVector2(pipe2D, next + dir).GetNumOfConnection() < PuzzleType - 1)
                     {
                         connectCandidate.Add(dir);
                     }
                     else
                     {
-                        if (!candidate.Contains(next + dir)) candidate.Add(next + dir);
+                        if (!candidate.Contains(next + dir) && !visted.Contains(next + dir)) candidate.Add(next + dir);
                     }
                 }
 
@@ -95,6 +101,7 @@ namespace Pipe
                 {
                     var ranConnection = Random.Range(0, connectCandidate.Count);
                     ConnectPipeByDirection(pipe2D, next, connectCandidate[ranConnection], PuzzleType);
+                    visted.Add(next);
                 }
             }
 
