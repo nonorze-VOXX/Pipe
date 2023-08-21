@@ -6,10 +6,10 @@ namespace Pipe
 {
     public class UnitPipeGameObject : MonoBehaviour
     {
+        private UnitPipe _originUnitPipe;
         private GameObject _pipeEnd;
         private List<GameObject> _pipeLine;
         private int _puzzleType;
-        private UnitPipe _unitPipe;
         private int rotationTimes;
 
         private void Awake()
@@ -23,7 +23,7 @@ namespace Pipe
         private void Start()
         {
             var angle = 360 / _puzzleType;
-            _pipeEnd.SetActive(_unitPipe.GetNumOfConnection() == 1);
+            _pipeEnd.SetActive(_originUnitPipe.GetNumOfConnection() == 1);
             for (var i = 1; i < _puzzleType; i++)
             {
                 var line = Instantiate(transform.GetChild(1).GameObject(), transform);
@@ -32,13 +32,14 @@ namespace Pipe
             }
 
             var index = 1;
-            foreach (var up in _unitPipe.connections) transform.GetChild(index++).GameObject().SetActive(up);
+            foreach (var up in _originUnitPipe.connections) transform.GetChild(index++).GameObject().SetActive(up);
         }
 
         private void OnMouseDown()
         {
             rotationTimes = (rotationTimes + 1) % _puzzleType;
             transform.Rotate(new Vector3(0, 0, 90));
+            _originUnitPipe.RotateOverClock(true);
         }
 
         public void SetPuzzleType(int line)
@@ -48,7 +49,7 @@ namespace Pipe
 
         public void SetUnitPipe(UnitPipe up)
         {
-            _unitPipe = up;
+            _originUnitPipe = up;
         }
     }
 }

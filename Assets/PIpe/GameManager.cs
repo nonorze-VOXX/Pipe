@@ -10,6 +10,7 @@ namespace Pipe
         [SerializeField] private GameObject pipePrefab;
         private readonly List<Vector2> iToV2 = new();
         private readonly Dictionary<Vector2, int> V2ToIndex = new();
+        private Camera _camera;
         private List<List<UnitPipe>> _pipe2D;
 
         private void Awake()
@@ -26,7 +27,8 @@ namespace Pipe
 
         private void Start()
         {
-            // var init = new Vector2(1, 1);
+            _camera = Camera.main;
+            // _camera.
             _pipe2D = new List<List<UnitPipe>>();
             for (var y = 0; y < pipeData.mapSize.y; y++)
             {

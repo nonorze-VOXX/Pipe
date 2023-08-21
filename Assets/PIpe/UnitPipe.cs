@@ -24,5 +24,15 @@ namespace Pipe
 
             return ans;
         }
+
+        public void RotateOverClock(bool reverse)
+        {
+            List<bool> newList = new();
+            var dir = 1;
+            if (reverse) dir = -1;
+            for (var index = 0; index < connections.Count; index++)
+                newList.Add(connections[(index + connections.Count + dir) % connections.Count]);
+            connections = newList;
+        }
     }
 }
