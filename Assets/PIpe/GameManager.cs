@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GameSetting;
+using General;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -45,7 +46,7 @@ namespace Pipe
                 pipeData.pipeSize.y * pipeData.mapSize.y, -20) / 2;
 
             _pipeGameObjects = new List<List<UnitPipeGameObject>>();
-            _pipe2D = Generate2DArrByVector2<UnitPipe>(pipeData.mapSize);
+            _pipe2D = TemplateFunction.Generate2DArrByVector2<UnitPipe>(pipeData.mapSize);
 
             var init = new Vector2(Random.Range(0, (int)pipeData.mapSize.x - 1),
                 Random.Range(0, (int)pipeData.mapSize.y - 1));
@@ -87,9 +88,8 @@ namespace Pipe
                     _gameFlow = GameFlow.PLAYING;
                     break;
                 case GameFlow.PLAYING:
-                    float orthographicSize;
-                    var cameraSize = new Vector2(_camera.aspect * (orthographicSize = _camera.orthographicSize * 2),
-                        orthographicSize);
+                    var orthographicSize = _camera.orthographicSize * 2;
+                    var cameraSize = new Vector2(_camera.aspect, 1) * orthographicSize;
                     _camera.orthographicSize = GetCameraSize(pipeData.mapSize, cameraSize, _camera.aspect);
                     if (pipeData.GameWin)
                         _gameFlow = GameFlow.WIN;
@@ -145,7 +145,7 @@ namespace Pipe
                     if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
 
                     if (visted.Contains(next + dir) &&
-                        Get2DArrByVector2(pipe2D, next + dir).GetNumOfConnection() < PuzzleType - 1)
+                        TemplateFunction.Get2DArrByVector2(pipe2D, next + dir).GetNumOfConnection() < PuzzleType - 1)
                     {
                         connectCandidate.Add(dir);
                     }
@@ -169,8 +169,8 @@ namespace Pipe
 
         private void ConnectPipeByDirection(List<List<UnitPipe>> pipe2D, Vector2 next, Vector2 dir, int puzzleType)
         {
-            Get2DArrByVector2(pipe2D, next).connections[V2ToIndex[dir]] = true;
-            Get2DArrByVector2(pipe2D, next + dir).connections[(puzzleType / 2 + V2ToIndex[dir]) % puzzleType] = true;
+            TemplateFunction.Get2DArrByVector2(pipe2D, next).connections[V2ToIndex[dir]] = true;
+            TemplateFunction.Get2DArrByVector2(pipe2D, next + dir).connections[(puzzleType / 2 + V2ToIndex[dir]) % puzzleType] = true;
         }
 
         private bool InMap(Vector2 now, Vector2 mapSize)
@@ -190,7 +190,7 @@ namespace Pipe
             for (var x = 0; x < waterPipe[0].Count; x++)
             {
                 if (waterPipe[y][x]) connected++;
-                Get2DArrByVector2(_pipeGameObjects, new Vector2(x, y)).SetConnectWaterSource(waterPipe[y][x]);
+                TemplateFunction.Get2DArrByVector2(_pipeGameObjects, new Vector2(x, y)).SetConnectWaterSource(waterPipe[y][x]);
             }
 
             if (connected == (int)pipeData.mapSize.y * (int)pipeData.mapSize.x) pipeData.GameWin = true;
@@ -205,14 +205,14 @@ namespace Pipe
             {
                 var now = candidate.Dequeue();
                 visted.Add(now);
-                var linkState = Get2DArrByVector2(pipe2D, now).connections;
+                var linkState = TemplateFunction.Get2DArrByVector2(pipe2D, now).connections;
                 for (var dir = 0; dir < linkState.Count; dir++)
                 {
                     var next = now + iToV2[dir];
                     if (!InMap(next, new Vector2(pipe2D[0].Count, pipe2D.Count))
                         || visted.Contains(next))
                         continue;
-                    if (linkState[dir] && Get2DArrByVector2(pipe2D, now + iToV2[dir])
+                    if (linkState[dir] && TemplateFunction.Get2DArrByVector2(pipe2D, now + iToV2[dir])
                             .connections[(dir + puzzleType / 2) % puzzleType]) candidate.Enqueue(next);
                 }
             }
@@ -225,32 +225,10 @@ namespace Pipe
                 waterPipe.Add(pipe1D);
             }
 
-            foreach (var vector2 in visted) Set2DArrByVector2(waterPipe, vector2, true);
+            foreach (var vector2 in visted) TemplateFunction.Set2DArrByVector2(waterPipe, vector2, true);
 
             return waterPipe;
         }
 
-        private List<List<T>> Generate2DArrByVector2<T>(Vector2 now) where T : new()
-        {
-            var T2 = new List<List<T>>();
-            for (var y = 0; y < now.y; y++)
-            {
-                var T1 = new List<T>();
-                for (var x = 0; x < now.x; x++) T1.Add(new T());
-                T2.Add(T1);
-            }
-
-            return T2;
-        }
-
-        private T Get2DArrByVector2<T>(List<List<T>> pipe2D, Vector2 now)
-        {
-            return pipe2D[(int)now.y][(int)now.x];
-        }
-
-        private void Set2DArrByVector2<T>(List<List<T>> arr2, Vector2 vector2, T t)
-        {
-            arr2[(int)vector2.y][(int)vector2.x] = t;
-        }
     }
 }

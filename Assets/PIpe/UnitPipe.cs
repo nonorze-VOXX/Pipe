@@ -17,6 +17,11 @@ namespace Pipe
             connections.Add(false);
         }
 
+        public UnitPipe(List<bool> cs)
+        {
+            connections = cs;
+        }
+
         public int GetNumOfConnection()
         {
             var ans = 0;
