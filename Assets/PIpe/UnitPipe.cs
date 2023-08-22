@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 
 namespace Pipe
 {
+    [Serializable]
     public class UnitPipe
     {
         public List<bool> connections;

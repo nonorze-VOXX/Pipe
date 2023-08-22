@@ -45,13 +45,7 @@ namespace Pipe
                 pipeData.pipeSize.y * pipeData.mapSize.y, -20) / 2;
 
             _pipeGameObjects = new List<List<UnitPipeGameObject>>();
-            _pipe2D = new List<List<UnitPipe>>();
-            for (var y = 0; y < pipeData.mapSize.y; y++)
-            {
-                var pipe1D = new List<UnitPipe>();
-                for (var x = 0; x < pipeData.mapSize.x; x++) pipe1D.Add(new UnitPipe());
-                _pipe2D.Add(pipe1D);
-            }
+            _pipe2D = Generate2DArrByVector2<UnitPipe>(pipeData.mapSize);
 
             var init = new Vector2(Random.Range(0, (int)pipeData.mapSize.x - 1),
                 Random.Range(0, (int)pipeData.mapSize.y - 1));
@@ -188,11 +182,6 @@ namespace Pipe
         }
 
 
-        private T Get2DArrByVector2<T>(List<List<T>> pipe2D, Vector2 now)
-        {
-            return pipe2D[(int)now.y][(int)now.x];
-        }
-
         public void UpdatePipe()
         {
             var waterPipe = GetWaterPipe(_pipe2D, _waterSource, pipeData.puzzleType);
@@ -239,6 +228,24 @@ namespace Pipe
             foreach (var vector2 in visted) Set2DArrByVector2(waterPipe, vector2, true);
 
             return waterPipe;
+        }
+
+        private List<List<T>> Generate2DArrByVector2<T>(Vector2 now) where T : new()
+        {
+            var T2 = new List<List<T>>();
+            for (var y = 0; y < now.y; y++)
+            {
+                var T1 = new List<T>();
+                for (var x = 0; x < now.x; x++) T1.Add(new T());
+                T2.Add(T1);
+            }
+
+            return T2;
+        }
+
+        private T Get2DArrByVector2<T>(List<List<T>> pipe2D, Vector2 now)
+        {
+            return pipe2D[(int)now.y][(int)now.x];
         }
 
         private void Set2DArrByVector2<T>(List<List<T>> arr2, Vector2 vector2, T t)
