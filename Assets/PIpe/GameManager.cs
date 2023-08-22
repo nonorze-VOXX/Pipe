@@ -6,7 +6,7 @@ using Random = UnityEngine.Random;
 
 namespace Pipe
 {
-    internal enum GameFlow
+    public enum GameFlow
     {
         START,
         PLAYING,
@@ -27,6 +27,7 @@ namespace Pipe
 
         private void Awake()
         {
+            pipeData.GameWin = false;
             iToV2.Add(Vector2.right);
             iToV2.Add(Vector2.up);
             iToV2.Add(Vector2.left);
@@ -96,12 +97,20 @@ namespace Pipe
                     var cameraSize = new Vector2(_camera.aspect * (orthographicSize = _camera.orthographicSize * 2),
                         orthographicSize);
                     _camera.orthographicSize = GetCameraSize(pipeData.mapSize, cameraSize, _camera.aspect);
+                    if (pipeData.GameWin)
+                        _gameFlow = GameFlow.WIN;
                     break;
                 case GameFlow.WIN:
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        public GameFlow GetGameFlow()
+        {
+            return _gameFlow;
         }
 
         private float GetCameraSize(Vector2 mapSize, Vector2 cameraSize, float cameraAspect)
@@ -187,9 +196,15 @@ namespace Pipe
         public void UpdatePipe()
         {
             var waterPipe = GetWaterPipe(_pipe2D, _waterSource, pipeData.puzzleType);
+            var connected = 0;
             for (var y = 0; y < waterPipe.Count; y++)
             for (var x = 0; x < waterPipe[0].Count; x++)
+            {
+                if (waterPipe[y][x]) connected++;
                 Get2DArrByVector2(_pipeGameObjects, new Vector2(x, y)).SetConnectWaterSource(waterPipe[y][x]);
+            }
+
+            if (connected == (int)pipeData.mapSize.y * (int)pipeData.mapSize.x) pipeData.GameWin = true;
         }
 
         private List<List<bool>> GetWaterPipe(List<List<UnitPipe>> pipe2D, Vector2 waterSource, int puzzleType)

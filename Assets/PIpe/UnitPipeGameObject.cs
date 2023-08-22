@@ -43,6 +43,7 @@ namespace Pipe
 
         private void OnMouseDown()
         {
+            if (_gameManager.GetGameFlow() == GameFlow.WIN) return;
             rotationTimes = (rotationTimes + 1) % _puzzleType;
             transform.Rotate(new Vector3(0, 0, 90));
             RotateOverClock(true);

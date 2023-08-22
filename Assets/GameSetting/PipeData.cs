@@ -9,5 +9,6 @@ namespace GameSetting
         public int puzzleType;
         public Vector3 boardLeftDown;
         public Vector3 pipeSize;
+        public bool GameWin;
     }
 }
