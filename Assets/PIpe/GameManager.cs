@@ -170,7 +170,8 @@ namespace Pipe
         private void ConnectPipeByDirection(List<List<UnitPipe>> pipe2D, Vector2 next, Vector2 dir, int puzzleType)
         {
             TemplateFunction.Get2DArrByVector2(pipe2D, next).connections[V2ToIndex[dir]] = true;
-            TemplateFunction.Get2DArrByVector2(pipe2D, next + dir).connections[(puzzleType / 2 + V2ToIndex[dir]) % puzzleType] = true;
+            TemplateFunction.Get2DArrByVector2(pipe2D, next + dir)
+                .connections[(puzzleType / 2 + V2ToIndex[dir]) % puzzleType] = true;
         }
 
         private bool InMap(Vector2 now, Vector2 mapSize)
@@ -190,7 +191,8 @@ namespace Pipe
             for (var x = 0; x < waterPipe[0].Count; x++)
             {
                 if (waterPipe[y][x]) connected++;
-                TemplateFunction.Get2DArrByVector2(_pipeGameObjects, new Vector2(x, y)).SetConnectWaterSource(waterPipe[y][x]);
+                TemplateFunction.Get2DArrByVector2(_pipeGameObjects, new Vector2(x, y))
+                    .SetConnectWaterSource(waterPipe[y][x]);
             }
 
             if (connected == (int)pipeData.mapSize.y * (int)pipeData.mapSize.x) pipeData.GameWin = true;
@@ -229,6 +231,5 @@ namespace Pipe
 
             return waterPipe;
         }
-
     }
 }
