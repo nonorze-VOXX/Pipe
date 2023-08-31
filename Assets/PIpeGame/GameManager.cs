@@ -114,7 +114,7 @@ namespace Pipe
         }
 
 
-        private List<List<UnitPipe>> GenerateMap(List<List<UnitPipe>> pipe2D, Vector2 init, int PuzzleType)
+        private List<List<UnitPipe>> GenerateMap(List<List<UnitPipe>> pipe2D, Vector2 init, int puzzleType)
         {
             var visted = new List<Vector2>();
             var candidate = new List<Vector2>();
@@ -128,33 +128,40 @@ namespace Pipe
                 var ran = Random.Range(0, candidate.Count);
                 var next = candidate[ran];
                 candidate.RemoveRange(ran, 1);
-                List<Vector2> connectCandidate = new();
-                Debug.Log(next);
-                foreach (var dir in Vector2List.FourDirection())
-                {
-                    if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
-
-                    if (visted.Contains(next + dir) &&
-                        ListFunction.Get2DArrByVector2(pipe2D, next + dir).GetNumOfConnection() < PuzzleType - 1)
-                    {
-                        connectCandidate.Add(dir);
-                    }
-                    else
-                    {
-                        if (!candidate.Contains(next + dir) && !visted.Contains(next + dir)) candidate.Add(next + dir);
-                    }
-                }
-
+                var connectCandidate = GetConnectCandidate(next, pipe2D, visted, puzzleType);
                 if (connectCandidate.Count != 0)
                 {
                     var ranConnection = Random.Range(0, connectCandidate.Count);
-                    ConnectPipeByDirection(pipe2D, next, connectCandidate[ranConnection], PuzzleType);
+                    ConnectPipeByDirection(pipe2D, next, connectCandidate[ranConnection], puzzleType);
                     visted.Add(next);
                 }
+
+                if (connectCandidate.Count != 0 || visted.Count == 1)
+                    foreach (var dir in Vector2List.FourDirection())
+                        if (InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count)) &&
+                            !candidate.Contains(next + dir) &&
+                            !visted.Contains(next + dir))
+                            candidate.Add(next + dir);
             }
 
 
             return pipe2D;
+        }
+
+        private List<Vector2> GetConnectCandidate(Vector2 next, List<List<UnitPipe>> pipe2D, List<Vector2> visted,
+            int puzzleType)
+        {
+            var connectCandidate = new List<Vector2>();
+            foreach (var dir in Vector2List.FourDirection())
+            {
+                if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
+
+                if (visted.Contains(next + dir) &&
+                    ListFunction.Get2DArrByVector2(pipe2D, next + dir).GetNumOfConnection() < puzzleType - 1)
+                    connectCandidate.Add(dir);
+            }
+
+            return connectCandidate;
         }
 
         private void ConnectPipeByDirection(List<List<UnitPipe>> pipe2D, Vector2 next, Vector2 dir, int puzzleType)
