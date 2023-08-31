@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GameSetting;
 using General;
 using UnityEngine;
@@ -19,7 +20,6 @@ namespace Pipe
     {
         [SerializeField] private PipeData pipeData;
         [SerializeField] private GameObject pipePrefab;
-        private readonly Dictionary<Vector2, int> V2ToIndex = new();
         private Camera _camera;
         private GameFlow _gameFlow;
         private List<List<UnitPipe>> _pipe2D;
@@ -29,10 +29,6 @@ namespace Pipe
         private void Awake()
         {
             pipeData.GameWin = false;
-            V2ToIndex.Add(Vector2.right, 0);
-            V2ToIndex.Add(Vector2.up, 1);
-            V2ToIndex.Add(Vector2.left, 2);
-            V2ToIndex.Add(Vector2.down, 3);
         }
 
         private void Start()
@@ -49,13 +45,11 @@ namespace Pipe
             _pipe2D = GenerateMap(_pipe2D, init, pipeData.puzzleType);
             _waterSource = init;
 
-            for (var y = 0; y < _pipe2D.Count; y++)
+            foreach (var (pipe1d, y) in _pipe2D.Select((value, i) => (value, i)))
             {
-                var pipe1D = _pipe2D[y];
                 var list = new List<UnitPipeGameObject>();
-                for (var x = 0; x < pipe1D.Count; x++)
+                foreach (var (pipe, x) in pipe1d.Select((value, i) => (value, i)))
                 {
-                    var p = pipe1D[x];
                     var np = Instantiate(pipePrefab, transform);
                     np.transform.name = "pipe" + y + "-" + x;
                     np.transform.position =
@@ -63,7 +57,7 @@ namespace Pipe
                     var unitPipeGameObject = np.GetComponent<UnitPipeGameObject>();
                     unitPipeGameObject.SetGameManager(this);
                     unitPipeGameObject.SetPuzzleType(pipeData.puzzleType);
-                    unitPipeGameObject.SetUnitPipe(p);
+                    unitPipeGameObject.SetUnitPipe(pipe);
                     var ran = Random.Range(0, pipeData.puzzleType);
                     for (var i = 0; i < ran; i++) unitPipeGameObject.RotateOverClock(true);
                     list.Add(unitPipeGameObject);
