@@ -184,8 +184,8 @@ namespace Pipe
         {
             var waterPipe = GetWaterPipe(_pipe2D, _waterSource, pipeData.puzzleType);
             var connected = 0;
-            for (var y = 0; y < waterPipe.Count; y++)
-            for (var x = 0; x < waterPipe[0].Count; x++)
+            foreach (var (pipe1d, y) in waterPipe.Select((value, i) => (value, i)))
+            foreach (var (pipe, x) in pipe1d.Select((value, i) => (value, i)))
             {
                 if (waterPipe[y][x]) connected++;
                 ListFunction.Get2DArrByVector2(_pipeGameObjects, new Vector2(x, y))
