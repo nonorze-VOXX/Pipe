@@ -187,16 +187,17 @@ namespace Pipe
             foreach (var (pipe1d, y) in waterPipe.Select((value, i) => (value, i)))
             foreach (var (pipe, x) in pipe1d.Select((value, i) => (value, i)))
             {
-                if (waterPipe[y][x]) connected++;
-                ListFunction.Get2DArrByVector2(_pipeGameObjects, new Vector2(x, y))
-                    .SetConnectWaterSource(waterPipe[y][x]);
+                var upg = ListFunction.Get2DArrByVector2(_pipeGameObjects, new Vector2(x, y));
+                if (waterPipe[y][x] == PipeStatus.Watered) connected++;
+                upg.SetConnectWaterSource(waterPipe[y][x]);
             }
 
             if (connected == (int)pipeData.mapSize.y * (int)pipeData.mapSize.x) pipeData.GameWin = true;
         }
 
-        private List<List<bool>> GetWaterPipe(List<List<UnitPipe>> pipe2D, Vector2 waterSource, int puzzleType)
+        private List<List<PipeStatus>> GetWaterPipe(List<List<UnitPipe>> pipe2D, Vector2 waterSource, int puzzleType)
         {
+            var pipeContain = PipeStatus.Watered;
             var visted = new List<Vector2>();
             var candidate = new Queue<Vector2>();
             candidate.Enqueue(waterSource);
@@ -205,26 +206,34 @@ namespace Pipe
                 var now = candidate.Dequeue();
                 visted.Add(now);
                 var linkState = ListFunction.Get2DArrByVector2(pipe2D, now).connections;
+                var neighborVisted = 0;
                 foreach (var dir in Vector2List.FourDirection())
                 {
                     var next = now + dir;
-                    if (!InMap(next, new Vector2(pipe2D[0].Count, pipe2D.Count))
-                        || visted.Contains(next))
+                    if (!InMap(next, new Vector2(pipe2D[0].Count, pipe2D.Count)))
                         continue;
                     if (linkState[dir] && ListFunction.Get2DArrByVector2(pipe2D, now + dir)
-                            .connections[dir * -1]) candidate.Enqueue(next);
+                            .connections[dir * -1])
+                    {
+                        if (visted.Contains(next))
+                            neighborVisted += 1;
+                        else
+                            candidate.Enqueue(next);
+                    }
                 }
+
+                if (neighborVisted > 1) pipeContain = PipeStatus.Cycling;
             }
 
-            List<List<bool>> waterPipe = new();
+            List<List<PipeStatus>> waterPipe = new();
             for (var y = 0; y < pipe2D[0].Count; y++)
             {
-                var pipe1D = new List<bool>();
-                for (var x = 0; x < pipe2D.Count; x++) pipe1D.Add(false);
+                var pipe1D = new List<PipeStatus>();
+                for (var x = 0; x < pipe2D.Count; x++) pipe1D.Add(PipeStatus.Dry);
                 waterPipe.Add(pipe1D);
             }
 
-            foreach (var vector2 in visted) ListFunction.Set2DArrByVector2(waterPipe, vector2, true);
+            foreach (var vector2 in visted) ListFunction.Set2DArrByVector2(waterPipe, vector2, pipeContain);
 
             return waterPipe;
         }
