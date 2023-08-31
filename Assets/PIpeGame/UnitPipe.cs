@@ -10,11 +10,7 @@ namespace Pipe
 
         public UnitPipe()
         {
-            connections = new List<bool>();
-            connections.Add(false);
-            connections.Add(false);
-            connections.Add(false);
-            connections.Add(false);
+            connections = new List<bool> { false, false, false, false };
         }
 
         public UnitPipe(List<bool> cs)

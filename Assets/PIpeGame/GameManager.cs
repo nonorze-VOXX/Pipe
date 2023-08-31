@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GameSetting;
 using General;
 using UnityEngine;
+using UnityTools.Vector2;
 using Random = UnityEngine.Random;
 
 namespace Pipe
@@ -18,7 +19,6 @@ namespace Pipe
     {
         [SerializeField] private PipeData pipeData;
         [SerializeField] private GameObject pipePrefab;
-        private readonly List<Vector2> iToV2 = new();
         private readonly Dictionary<Vector2, int> V2ToIndex = new();
         private Camera _camera;
         private GameFlow _gameFlow;
@@ -29,10 +29,6 @@ namespace Pipe
         private void Awake()
         {
             pipeData.GameWin = false;
-            iToV2.Add(Vector2.right);
-            iToV2.Add(Vector2.up);
-            iToV2.Add(Vector2.left);
-            iToV2.Add(Vector2.down);
             V2ToIndex.Add(Vector2.right, 0);
             V2ToIndex.Add(Vector2.up, 1);
             V2ToIndex.Add(Vector2.left, 2);
@@ -140,7 +136,7 @@ namespace Pipe
                 candidate.RemoveRange(ran, 1);
                 List<Vector2> connectCandidate = new();
                 // foreach (var c in visted) Debug.Log(c);
-                foreach (var dir in iToV2)
+                foreach (var dir in Vector2List.FourDirection())
                 {
                     if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
 
@@ -210,11 +206,11 @@ namespace Pipe
                 var linkState = ListFunction.Get2DArrByVector2(pipe2D, now).connections;
                 for (var dir = 0; dir < linkState.Count; dir++)
                 {
-                    var next = now + iToV2[dir];
+                    var next = now + Vector2List.FourDirection()[dir];
                     if (!InMap(next, new Vector2(pipe2D[0].Count, pipe2D.Count))
                         || visted.Contains(next))
                         continue;
-                    if (linkState[dir] && ListFunction.Get2DArrByVector2(pipe2D, now + iToV2[dir])
+                    if (linkState[dir] && ListFunction.Get2DArrByVector2(pipe2D, now + Vector2List.FourDirection()[dir])
                             .connections[(dir + puzzleType / 2) % puzzleType]) candidate.Enqueue(next);
                 }
             }
