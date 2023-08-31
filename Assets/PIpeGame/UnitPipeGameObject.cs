@@ -1,9 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityTools.Vector2;
 
 namespace Pipe
 {
+    public enum PipeStatus
+    {
+        Watered,
+        Dry,
+        Cycling
+    }
+
     public class UnitPipeGameObject : MonoBehaviour
     {
         private List<SpriteRenderer> _childSprites;
@@ -38,7 +47,8 @@ namespace Pipe
                 _childSprites.Add(transform.GetChild(i).transform.GetChild(0).GetComponent<SpriteRenderer>());
 
             var index = 1;
-            foreach (var up in _originUnitPipe.connections) transform.GetChild(index++).GameObject().SetActive(up);
+            foreach (var up in Vector2List.FourDirection())
+                transform.GetChild(index++).GameObject().SetActive(_originUnitPipe.connections[up]);
         }
 
         private void OnMouseDown()
@@ -70,13 +80,26 @@ namespace Pipe
             _originUnitPipe = up;
         }
 
-        public void SetConnectWaterSource(bool b)
+        public void SetConnectWaterSource(PipeStatus s)
         {
+            Color color;
+            switch (s)
+            {
+                case PipeStatus.Watered:
+                    color = Color.blue;
+                    break;
+                case PipeStatus.Dry:
+                    color = Color.black;
+                    break;
+                case PipeStatus.Cycling:
+                    color = Color.red;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(s), s, null);
+            }
+
             foreach (var sprite in _childSprites)
-                if (b)
-                    sprite.color = Color.blue;
-                else
-                    sprite.color = Color.black;
+                sprite.color = color;
         }
     }
 }
