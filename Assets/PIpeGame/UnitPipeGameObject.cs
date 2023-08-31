@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using GameSetting;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityTools.Vector2;
 
 namespace Pipe
 {
@@ -20,12 +20,13 @@ namespace Pipe
         private UnitPipe _originUnitPipe;
         private GameObject _pipeEnd;
         private List<GameObject> _pipeLine;
-        private int _puzzleType;
-        private int rotationTimes;
+
+        private PuzzleType _puzzleType;
+        // private int rotationTimes;
 
         private void Awake()
         {
-            rotationTimes = 0;
+            // rotationTimes = 0;
             _pipeLine = new List<GameObject>();
             _pipeLine.Add(transform.GetChild(1).GameObject());
             _pipeEnd = transform.GetChild(0).GameObject();
@@ -33,10 +34,10 @@ namespace Pipe
 
         private void Start()
         {
-            var angle = 360 / _puzzleType;
+            var angle = 360 / (int)_puzzleType;
             _pipeEnd.SetActive(_originUnitPipe.GetNumOfConnection() == 1);
             _childSprites = new List<SpriteRenderer>();
-            for (var i = 1; i < _puzzleType; i++)
+            for (var i = 1; i < (int)_puzzleType; i++)
             {
                 var line = Instantiate(transform.GetChild(1).GameObject(), transform);
                 line.transform.Rotate(new Vector3(0, 0, angle * i));
@@ -47,15 +48,16 @@ namespace Pipe
                 _childSprites.Add(transform.GetChild(i).transform.GetChild(0).GetComponent<SpriteRenderer>());
 
             var index = 1;
-            foreach (var up in Vector2List.FourDirection())
+            foreach (var up in _originUnitPipe.GetNeighbor())
                 transform.GetChild(index++).GameObject().SetActive(_originUnitPipe.connections[up]);
         }
 
         private void OnMouseDown()
         {
             if (_gameManager.GetGameFlow() == GameFlow.WIN) return;
-            rotationTimes = (rotationTimes + 1) % _puzzleType;
-            transform.Rotate(new Vector3(0, 0, 90));
+            // rotationTimes = (rotationTimes + 1) % (int)_puzzleType;
+
+            transform.Rotate(new Vector3(0, 0, 360.0f / _originUnitPipe.GetNeighbor().Count));
             RotateOverClock(true);
             _gameManager.UpdatePipe();
         }
@@ -70,9 +72,9 @@ namespace Pipe
             _gameManager = gameManager;
         }
 
-        public void SetPuzzleType(int line)
+        public void SetPuzzleType(PuzzleType puzzleType)
         {
-            _puzzleType = line;
+            _puzzleType = puzzleType;
         }
 
         public void SetUnitPipe(UnitPipe up)
