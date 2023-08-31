@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityTools.Vector2;
 
 namespace Pipe
 {
@@ -38,7 +39,8 @@ namespace Pipe
                 _childSprites.Add(transform.GetChild(i).transform.GetChild(0).GetComponent<SpriteRenderer>());
 
             var index = 1;
-            foreach (var up in _originUnitPipe.connections) transform.GetChild(index++).GameObject().SetActive(up);
+            foreach (var up in Vector2List.FourDirection())
+                transform.GetChild(index++).GameObject().SetActive(_originUnitPipe.connections[up]);
         }
 
         private void OnMouseDown()

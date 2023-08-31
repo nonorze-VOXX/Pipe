@@ -1,28 +1,31 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityTools.Vector2;
 
 namespace Pipe
 {
     [Serializable]
     public class UnitPipe
     {
-        public List<bool> connections;
+        public Dictionary<Vector2, bool> connections;
 
         public UnitPipe()
         {
-            connections = new List<bool> { false, false, false, false };
-        }
-
-        public UnitPipe(List<bool> cs)
-        {
-            connections = cs;
+            connections = new Dictionary<Vector2, bool>
+            {
+                { Vector2.right, false },
+                { Vector2.up, false },
+                { Vector2.left, false },
+                { Vector2.down, false }
+            };
         }
 
         public int GetNumOfConnection()
         {
             var ans = 0;
             foreach (var c in connections)
-                if (c)
+                if (c.Value)
                     ans++;
 
             return ans;
@@ -30,12 +33,16 @@ namespace Pipe
 
         public void RotateOverClock(bool reverse)
         {
-            List<bool> newList = new();
-            var dir = 1;
-            if (reverse) dir = -1;
-            for (var index = 0; index < connections.Count; index++)
-                newList.Add(connections[(index + connections.Count + dir) % connections.Count]);
-            connections = newList;
+            Queue<bool> queue = new();
+            foreach (var dir in Vector2List.FourDirection()) queue.Enqueue(connections[dir]);
+            queue.Enqueue(queue.Dequeue());
+            if (reverse)
+            {
+                queue.Enqueue(queue.Dequeue());
+                queue.Enqueue(queue.Dequeue());
+            }
+
+            foreach (var dir in Vector2List.FourDirection()) connections[dir] = queue.Dequeue();
         }
     }
 }

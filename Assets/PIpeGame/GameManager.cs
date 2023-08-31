@@ -135,7 +135,7 @@ namespace Pipe
                 var next = candidate[ran];
                 candidate.RemoveRange(ran, 1);
                 List<Vector2> connectCandidate = new();
-                // foreach (var c in visted) Debug.Log(c);
+                Debug.Log(next);
                 foreach (var dir in Vector2List.FourDirection())
                 {
                     if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
@@ -165,9 +165,9 @@ namespace Pipe
 
         private void ConnectPipeByDirection(List<List<UnitPipe>> pipe2D, Vector2 next, Vector2 dir, int puzzleType)
         {
-            ListFunction.Get2DArrByVector2(pipe2D, next).connections[V2ToIndex[dir]] = true;
+            ListFunction.Get2DArrByVector2(pipe2D, next).connections[dir] = true;
             ListFunction.Get2DArrByVector2(pipe2D, next + dir)
-                .connections[(puzzleType / 2 + V2ToIndex[dir]) % puzzleType] = true;
+                .connections[dir * -1] = true;
         }
 
         private bool InMap(Vector2 now, Vector2 mapSize)
@@ -204,14 +204,14 @@ namespace Pipe
                 var now = candidate.Dequeue();
                 visted.Add(now);
                 var linkState = ListFunction.Get2DArrByVector2(pipe2D, now).connections;
-                for (var dir = 0; dir < linkState.Count; dir++)
+                foreach (var dir in Vector2List.FourDirection())
                 {
-                    var next = now + Vector2List.FourDirection()[dir];
+                    var next = now + dir;
                     if (!InMap(next, new Vector2(pipe2D[0].Count, pipe2D.Count))
                         || visted.Contains(next))
                         continue;
-                    if (linkState[dir] && ListFunction.Get2DArrByVector2(pipe2D, now + Vector2List.FourDirection()[dir])
-                            .connections[(dir + puzzleType / 2) % puzzleType]) candidate.Enqueue(next);
+                    if (linkState[dir] && ListFunction.Get2DArrByVector2(pipe2D, now + dir)
+                            .connections[dir * -1]) candidate.Enqueue(next);
                 }
             }
 
