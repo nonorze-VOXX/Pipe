@@ -62,13 +62,30 @@ namespace Pipe
             return mapSize.x / cameraAspect / 2;
         }
 
-        private Vector3 GetPipePositon(Vector3 pipeDataBoardLeftDown, Vector3 pipeSize, Vector3 index)
+        private Vector3 GetPipePositon(Vector3 pipeDataBoardLeftDown, Vector3 pipeSize, Vector3 index,
+            PuzzleType puzzleType)
         {
-            return new Vector3(
-                pipeDataBoardLeftDown.x + index.x * pipeSize.x + pipeSize.x / 2,
-                pipeDataBoardLeftDown.y + index.y * pipeSize.y + pipeSize.y / 2,
-                pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
-            );
+            switch (puzzleType)
+            {
+                case PuzzleType.FOUR:
+                    return new Vector3(
+                        pipeDataBoardLeftDown.x + index.x * pipeSize.x + pipeSize.x / 2,
+                        pipeDataBoardLeftDown.y + index.y * pipeSize.y + pipeSize.y / 2,
+                        pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
+                    );
+                    break;
+                case PuzzleType.SIX:
+                    return new Vector3(
+                        pipeDataBoardLeftDown.x + pipeSize.x * (index.x + 1) -
+                        pipeSize.x * 0.5f * (index.y % 2),
+                        pipeDataBoardLeftDown.y + pipeSize.y / 2 +
+                        index.y * 1.5f * pipeSize.y / 2,
+                        pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
+                    );
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
+            }
         }
 
         private bool InMap(Vector2 now, Vector2 mapSize)
@@ -107,13 +124,12 @@ namespace Pipe
                 var now = candidate.Dequeue();
                 visted.Add(now);
                 var neighborVisited = 0;
-                var neighbor = GetNeighbor(puzzleType, (int)now.x);
+                var neighbor = GetNeighbor(puzzleType, (int)now.y);
 
                 var linkState = ListFunction.Get2DArrByVector2(pipe2D, now).connections;
                 foreach (var dir in neighbor)
                 {
                     var next = now + dir;
-                    print(linkState.Count);
                     if (!InMap(next, new Vector2(pipe2D[0].Count, pipe2D.Count)))
                         continue;
                     if (linkState[dir] && ListFunction.Get2DArrByVector2(pipe2D, now + dir)
@@ -170,11 +186,11 @@ namespace Pipe
 
             _pipeGameObjects = new List<List<UnitPipeGameObject>>();
             _pipe2D = ListFunction.Generate2DArrByVector2<UnitPipe>(pipeData.mapSize);
-            foreach (var pipe1D in _pipe2D)
+            foreach (var (pipe1D, y) in _pipe2D.Select((value, i) => (value, i)))
             foreach (var (pipe, x) in pipe1D.Select((value, i) => (value, i)))
             {
                 pipe.SetPuzzleType(pipeData.puzzleType);
-                pipe.SetNeighbor(GetNeighbor(pipeData.puzzleType, x));
+                pipe.SetNeighbor(GetNeighbor(pipeData.puzzleType, y));
             }
 
             var init = new Vector2(Random.Range(0, (int)pipeData.mapSize.x - 1),
@@ -190,13 +206,14 @@ namespace Pipe
                     var np = Instantiate(pipePrefab, transform);
                     np.transform.name = "pipe" + y + "-" + x;
                     np.transform.position =
-                        GetPipePositon(pipeData.boardLeftDown, pipeData.pipeSize, new Vector3(x, y, 0));
+                        GetPipePositon(pipeData.boardLeftDown, pipeData.pipeSize, new Vector3(x, y, 0),
+                            pipeData.puzzleType);
                     var unitPipeGameObject = np.GetComponent<UnitPipeGameObject>();
                     unitPipeGameObject.SetGameManager(this);
                     unitPipeGameObject.SetPuzzleType(pipeData.puzzleType);
                     unitPipeGameObject.SetUnitPipe(pipe);
                     var ran = Random.Range(0, (int)pipeData.puzzleType);
-                    for (var i = 0; i < ran; i++) unitPipeGameObject.RotateOverClock(true);
+                    // for (var i = 0; i < ran; i++) unitPipeGameObject.RotateOverClock(true);
                     list.Add(unitPipeGameObject);
                 }
 
@@ -224,6 +241,9 @@ namespace Pipe
                 if (times > pipe2D[0].Count * pipe2D.Count * 3) break;
                 var ran = Random.Range(0, candidate.Count);
                 var next = candidate[ran];
+                var output = "";
+                foreach (var c in candidate) output += c.ToString();
+                print(output);
                 candidate.RemoveRange(ran, 1);
                 var connectCandidate = GetConnectCandidate(next, pipe2D, visted, puzzleType);
                 if (connectCandidate.Count != 0)
@@ -249,7 +269,7 @@ namespace Pipe
             PuzzleType puzzleType)
         {
             var connectCandidate = new List<Vector2>();
-            foreach (var dir in GetNeighbor(puzzleType, (int)next.x))
+            foreach (var dir in GetNeighbor(puzzleType, (int)next.y))
             {
                 if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
 
