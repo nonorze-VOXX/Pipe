@@ -73,7 +73,6 @@ namespace Pipe
                         pipeDataBoardLeftDown.y + index.y * pipeSize.y + pipeSize.y / 2,
                         pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
                     );
-                    break;
                 case PuzzleType.SIX:
                     return new Vector3(
                         pipeDataBoardLeftDown.x + pipeSize.x * (index.x + 1) -
@@ -82,7 +81,6 @@ namespace Pipe
                         index.y * pipeSize.y * Mathf.Cos(30.0f / 180 * Mathf.PI),
                         pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
                     );
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
             }
@@ -94,7 +92,7 @@ namespace Pipe
             {
                 var t = list[(int)targetPosition.y][(int)targetPosition.x];
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }
