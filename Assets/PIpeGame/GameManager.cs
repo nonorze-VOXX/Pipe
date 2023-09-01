@@ -193,19 +193,13 @@ namespace Pipe
             switch (puzzleType)
             {
                 case PuzzleType.FOUR:
-                    return new Vector3(
-                        pipeDataBoardLeftDown.x + index.x * pipeSize.x + pipeSize.x / 2,
-                        pipeDataBoardLeftDown.y + index.y * pipeSize.y + pipeSize.y / 2,
-                        pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
-                    );
+                    return
+                        pipeDataBoardLeftDown + VectorFunction.ElementWiseMultiply(index, pipeSize) + pipeSize / 2;
                 case PuzzleType.SIX:
-                    return new Vector3(
-                        pipeDataBoardLeftDown.x + pipeSize.x * (index.x + 1) -
-                        pipeSize.x * 0.5f * (index.y % 2),
-                        pipeDataBoardLeftDown.y + pipeSize.y / 2 / Mathf.Sin(30.0f / 180 * Mathf.PI) +
-                        index.y * pipeSize.y * Mathf.Cos(30.0f / 180 * Mathf.PI),
-                        pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
-                    );
+                    return pipeDataBoardLeftDown + VectorFunction.ElementWiseMultiply(pipeSize,
+                        new Vector3(index.x + 1 - 0.5f * (index.y % 2),
+                            0.5f / Mathf.Sin(30.0f / 180 * Mathf.PI) + index.y * Mathf.Cos(30.0f / 180 * Mathf.PI),
+                            index.z + 0.5f));
                 default:
                     throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
             }
