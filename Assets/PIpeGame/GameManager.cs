@@ -151,6 +151,20 @@ namespace Pipe
 
         #region Camera
 
+        private float GetCameraSize(Vector2 mapSize, Vector2 pipeSize, Vector2 cameraSize, float cameraAspect,
+            PuzzleType puzzleType)
+        {
+            var boardHeight = GetBoardHeight(pipeSize, mapSize, puzzleType);
+            var boardWidth = GetBoardWidth(pipeSize, mapSize, puzzleType);
+            if (boardHeight / boardWidth < cameraSize.y / cameraSize.x)
+                return GetBoardWidth(pipeSize, mapSize, puzzleType) / cameraAspect / 2;
+            return GetBoardHeight(pipeSize, mapSize, puzzleType) / 2;
+        }
+
+        #endregion
+
+        #region boardInformation
+
         private Vector3 GetBoardCenterPosition(Vector3 boardLeftDown, Vector3 pipeSize, Vector2 mapSize,
             PuzzleType puzzleType)
         {
@@ -165,8 +179,6 @@ namespace Pipe
                     throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
             }
         }
-
-        #region boardSize
 
         private Vector3 GetBoardSize(Vector3 pipeSize, Vector2 mapSize, PuzzleType puzzleType)
         {
@@ -211,17 +223,6 @@ namespace Pipe
 
         #endregion
 
-        private float GetCameraSize(Vector2 mapSize, Vector2 pipeSize, Vector2 cameraSize, float cameraAspect,
-            PuzzleType puzzleType)
-        {
-            var boardHeight = GetBoardHeight(pipeSize, mapSize, puzzleType);
-            var boardWidth = GetBoardWidth(pipeSize, mapSize, puzzleType);
-            if (boardHeight / boardWidth < cameraSize.y / cameraSize.x)
-                return GetBoardWidth(pipeSize, mapSize, puzzleType) / cameraAspect / 2;
-            return GetBoardHeight(pipeSize, mapSize, puzzleType) / 2;
-        }
-
-        #endregion
 
         private Vector3 GetPipePositon(Vector3 pipeSize, Vector3 index,
             PuzzleType puzzleType)
