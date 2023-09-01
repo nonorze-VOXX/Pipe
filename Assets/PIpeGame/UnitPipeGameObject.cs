@@ -54,12 +54,6 @@ namespace Pipe
 
         private void OnMouseDown()
         {
-            foreach (var i in _originUnitPipe.GetNeighbor())
-            {
-                print(i);
-                print(_originUnitPipe.connections[i]);
-            }
-
             if (_gameManager.GetGameFlow() == GameFlow.WIN) return;
             // rotationTimes = (rotationTimes + 1) % (int)_puzzleType;
 

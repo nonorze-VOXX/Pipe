@@ -78,8 +78,8 @@ namespace Pipe
                     return new Vector3(
                         pipeDataBoardLeftDown.x + pipeSize.x * (index.x + 1) -
                         pipeSize.x * 0.5f * (index.y % 2),
-                        pipeDataBoardLeftDown.y + pipeSize.y / 2 +
-                        index.y * 1.5f * pipeSize.y / 2,
+                        pipeDataBoardLeftDown.y + pipeSize.y / 2 / Mathf.Sin(30.0f / 180 * Mathf.PI) +
+                        index.y * pipeSize.y * Mathf.Cos(30.0f / 180 * Mathf.PI),
                         pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
                     );
                     break;
