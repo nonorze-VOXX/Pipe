@@ -88,12 +88,18 @@ namespace Pipe
             }
         }
 
-        private bool InMap(Vector2 now, Vector2 mapSize)
+        private bool InMap<T>(List<List<T>> list, Vector2 targetPosition)
         {
-            return now.x < mapSize.x &&
-                   now.x >= 0 &&
-                   now.y < mapSize.y &&
-                   now.y >= 0;
+            try
+            {
+                var t = list[(int)targetPosition.y][(int)targetPosition.x];
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+
+            return true;
         }
 
 
@@ -130,7 +136,7 @@ namespace Pipe
                 foreach (var dir in neighbor)
                 {
                     var next = now + dir;
-                    if (!InMap(next, new Vector2(pipe2D[0].Count, pipe2D.Count)))
+                    if (!InMap(pipe2D, next))
                         continue;
                     if (linkState[dir] && ListFunction.Get2DArrByVector2(pipe2D, now + dir)
                             .connections[dir * -1])
@@ -213,7 +219,7 @@ namespace Pipe
                     unitPipeGameObject.SetPuzzleType(pipeData.puzzleType);
                     unitPipeGameObject.SetUnitPipe(pipe);
                     var ran = Random.Range(0, (int)pipeData.puzzleType);
-                    // for (var i = 0; i < ran; i++) unitPipeGameObject.RotateOverClock(true);
+                    for (var i = 0; i < ran; i++) unitPipeGameObject.RotateOverClock(true);
                     list.Add(unitPipeGameObject);
                 }
 
@@ -255,7 +261,7 @@ namespace Pipe
 
                 if (connectCandidate.Count != 0 || visted.Count == 1)
                     foreach (var dir in GetNeighbor(puzzleType, (int)next.x))
-                        if (InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count)) &&
+                        if (InMap(pipe2D, next + dir) &&
                             !candidate.Contains(next + dir) &&
                             !visted.Contains(next + dir))
                             candidate.Add(next + dir);
@@ -271,7 +277,7 @@ namespace Pipe
             var connectCandidate = new List<Vector2>();
             foreach (var dir in GetNeighbor(puzzleType, (int)next.y))
             {
-                if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
+                if (!InMap(pipe2D, next + dir)) continue;
 
                 if (visted.Contains(next + dir) &&
                     ListFunction.Get2DArrByVector2(pipe2D, next + dir).GetNumOfConnection() < (int)puzzleType - 1)
