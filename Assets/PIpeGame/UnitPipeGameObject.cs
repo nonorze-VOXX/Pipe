@@ -13,6 +13,11 @@ namespace Pipe
         Cycling
     }
 
+    public enum PipeChild
+    {
+        Pipe=0,
+        Background=1
+    }
     public class UnitPipeGameObject : MonoBehaviour
     {
         private List<SpriteRenderer> _childSprites;
@@ -49,7 +54,7 @@ namespace Pipe
 
             var index = 1;
             foreach (var up in _originUnitPipe.GetNeighbor())
-                transform.GetChild(index++).GameObject().SetActive(_originUnitPipe.connections[up]);
+                transform.GetChild(index++).GetChild((int)PipeChild.Pipe).GameObject().SetActive(_originUnitPipe.connections[up]);
         }
 
         private void OnMouseDown()
