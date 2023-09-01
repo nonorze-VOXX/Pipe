@@ -42,12 +42,8 @@ namespace Pipe
         {
             Queue<bool> queue = new();
             foreach (var dir in _neighbor) queue.Enqueue(connections[dir]);
-            queue.Enqueue(queue.Dequeue());
-            if (reverse)
-            {
+            for (var i = 0; i < (_neighbor.Count + (reverse ? -1 : 1)) % _neighbor.Count; i++)
                 queue.Enqueue(queue.Dequeue());
-                queue.Enqueue(queue.Dequeue());
-            }
 
             foreach (var dir in _neighbor) connections[dir] = queue.Dequeue();
         }
