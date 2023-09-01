@@ -15,8 +15,8 @@ namespace Pipe
 
     public enum PipeChild
     {
-        Pipe=0,
-        Background=1
+        Pipe = 0,
+        Background = 1
     }
     public class UnitPipeGameObject : MonoBehaviour
     {
@@ -54,7 +54,21 @@ namespace Pipe
 
             var index = 1;
             foreach (var up in _originUnitPipe.GetNeighbor())
-                transform.GetChild(index++).GetChild((int)PipeChild.Pipe).GameObject().SetActive(_originUnitPipe.connections[up]);
+            {
+                transform.GetChild(index).GetChild((int)PipeChild.Pipe).GameObject()
+                    .SetActive(_originUnitPipe.connections[up]);
+                if (_originUnitPipe.GetNeighbor().Count == 6)
+                {
+                    var scale = transform.GetChild(index).GetChild((int)PipeChild.Background).transform.localScale;
+                    transform.GetChild(index).GetChild((int)PipeChild.Background).transform.localScale = new Vector3(
+                        scale.x,
+                        scale.x,
+                        scale.z
+                    );
+                }
+
+                index++;
+            }
         }
 
         private void OnMouseDown()
