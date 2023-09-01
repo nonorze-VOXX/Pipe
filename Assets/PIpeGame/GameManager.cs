@@ -26,49 +26,6 @@ namespace Pipe
         private List<List<UnitPipeGameObject>> _pipeGameObjects;
         private Vector2 _waterSource;
 
-        private void Awake()
-        {
-            pipeData.GameWin = false;
-        }
-
-        private void Start()
-        {
-            _camera = Camera.main;
-            _camera.transform.position = new Vector3(pipeData.pipeSize.x * pipeData.mapSize.x,
-                pipeData.pipeSize.y * pipeData.mapSize.y, -20) / 2;
-
-            _pipeGameObjects = new List<List<UnitPipeGameObject>>();
-            _pipe2D = ListFunction.Generate2DArrByVector2<UnitPipe>(pipeData.mapSize);
-
-            var init = new Vector2(Random.Range(0, (int)pipeData.mapSize.x - 1),
-                Random.Range(0, (int)pipeData.mapSize.y - 1));
-            _pipe2D = GenerateMap(_pipe2D, init, pipeData.puzzleType);
-            _waterSource = init;
-
-            foreach (var (pipe1d, y) in _pipe2D.Select((value, i) => (value, i)))
-            {
-                var list = new List<UnitPipeGameObject>();
-                foreach (var (pipe, x) in pipe1d.Select((value, i) => (value, i)))
-                {
-                    var np = Instantiate(pipePrefab, transform);
-                    np.transform.name = "pipe" + y + "-" + x;
-                    np.transform.position =
-                        GetPipePositon(pipeData.boardLeftDown, pipeData.pipeSize, new Vector3(x, y, 0));
-                    var unitPipeGameObject = np.GetComponent<UnitPipeGameObject>();
-                    unitPipeGameObject.SetGameManager(this);
-                    unitPipeGameObject.SetPuzzleType(pipeData.puzzleType);
-                    unitPipeGameObject.SetUnitPipe(pipe);
-                    var ran = Random.Range(0, pipeData.puzzleType);
-                    for (var i = 0; i < ran; i++) unitPipeGameObject.RotateOverClock(true);
-                    list.Add(unitPipeGameObject);
-                }
-
-                _pipeGameObjects.Add(list);
-            }
-
-            _gameFlow = GameFlow.START;
-        }
-
         private void Update()
         {
             switch (_gameFlow)
@@ -78,9 +35,12 @@ namespace Pipe
                     _gameFlow = GameFlow.PLAYING;
                     break;
                 case GameFlow.PLAYING:
+                    _camera.transform.position = GetBoardCenterPosition(pipeData.boardLeftDown, pipeData.pipeSize,
+                        pipeData.mapSize, pipeData.puzzleType);
                     var orthographicSize = _camera.orthographicSize * 2;
                     var cameraSize = new Vector2(_camera.aspect, 1) * orthographicSize;
-                    _camera.orthographicSize = GetCameraSize(pipeData.mapSize, cameraSize, _camera.aspect);
+                    _camera.orthographicSize = GetCameraSize(pipeData.mapSize, pipeData.pipeSize, cameraSize,
+                        _camera.aspect, pipeData.puzzleType);
                     if (pipeData.GameWin)
                         _gameFlow = GameFlow.WIN;
                     break;
@@ -92,91 +52,18 @@ namespace Pipe
             }
         }
 
-        public GameFlow GetGameFlow()
+        private bool InMap<T>(List<List<T>> list, Vector2 targetPosition)
         {
-            return _gameFlow;
-        }
-
-        private float GetCameraSize(Vector2 mapSize, Vector2 cameraSize, float cameraAspect)
-        {
-            if (cameraSize.x > cameraSize.y)
-                return mapSize.y / 2;
-            return mapSize.x / cameraAspect / 2;
-        }
-
-        private Vector3 GetPipePositon(Vector3 pipeDataBoardLeftDown, Vector3 pipeSize, Vector3 index)
-        {
-            return new Vector3(
-                pipeDataBoardLeftDown.x + index.x * pipeSize.x + pipeSize.x / 2,
-                pipeDataBoardLeftDown.y + index.y * pipeSize.y + pipeSize.y / 2,
-                pipeDataBoardLeftDown.z + index.z * pipeSize.z + pipeSize.z / 2
-            );
-        }
-
-
-        private List<List<UnitPipe>> GenerateMap(List<List<UnitPipe>> pipe2D, Vector2 init, int puzzleType)
-        {
-            var visted = new List<Vector2>();
-            var candidate = new List<Vector2>();
-            candidate.Add(init);
-            var times = 0;
-            visted.Add(init);
-            while (candidate.Count != 0)
+            try
             {
-                times++; //for save
-                if (times > pipe2D[0].Count * pipe2D.Count * 3) break;
-                var ran = Random.Range(0, candidate.Count);
-                var next = candidate[ran];
-                candidate.RemoveRange(ran, 1);
-                var connectCandidate = GetConnectCandidate(next, pipe2D, visted, puzzleType);
-                if (connectCandidate.Count != 0)
-                {
-                    var ranConnection = Random.Range(0, connectCandidate.Count);
-                    ConnectPipeByDirection(pipe2D, next, connectCandidate[ranConnection], puzzleType);
-                    visted.Add(next);
-                }
-
-                if (connectCandidate.Count != 0 || visted.Count == 1)
-                    foreach (var dir in Vector2List.FourDirection())
-                        if (InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count)) &&
-                            !candidate.Contains(next + dir) &&
-                            !visted.Contains(next + dir))
-                            candidate.Add(next + dir);
+                var t = list[(int)targetPosition.y][(int)targetPosition.x];
+            }
+            catch (Exception)
+            {
+                return false;
             }
 
-
-            return pipe2D;
-        }
-
-        private List<Vector2> GetConnectCandidate(Vector2 next, List<List<UnitPipe>> pipe2D, List<Vector2> visted,
-            int puzzleType)
-        {
-            var connectCandidate = new List<Vector2>();
-            foreach (var dir in Vector2List.FourDirection())
-            {
-                if (!InMap(next + dir, new Vector2(pipe2D[0].Count, pipe2D.Count))) continue;
-
-                if (visted.Contains(next + dir) &&
-                    ListFunction.Get2DArrByVector2(pipe2D, next + dir).GetNumOfConnection() < puzzleType - 1)
-                    connectCandidate.Add(dir);
-            }
-
-            return connectCandidate;
-        }
-
-        private void ConnectPipeByDirection(List<List<UnitPipe>> pipe2D, Vector2 next, Vector2 dir, int puzzleType)
-        {
-            ListFunction.Get2DArrByVector2(pipe2D, next).connections[dir] = true;
-            ListFunction.Get2DArrByVector2(pipe2D, next + dir)
-                .connections[dir * -1] = true;
-        }
-
-        private bool InMap(Vector2 now, Vector2 mapSize)
-        {
-            return now.x < mapSize.x &&
-                   now.x >= 0 &&
-                   now.y < mapSize.y &&
-                   now.y >= 0;
+            return true;
         }
 
 
@@ -195,7 +82,11 @@ namespace Pipe
             if (connected == (int)pipeData.mapSize.y * (int)pipeData.mapSize.x) pipeData.GameWin = true;
         }
 
-        private List<List<PipeStatus>> GetWaterPipe(List<List<UnitPipe>> pipe2D, Vector2 waterSource, int puzzleType)
+
+        #region Getter
+
+        private List<List<PipeStatus>> GetWaterPipe(List<List<UnitPipe>> pipe2D, Vector2 waterSource,
+            PuzzleType puzzleType)
         {
             var pipeContain = PipeStatus.Watered;
             var visted = new List<Vector2>();
@@ -205,24 +96,26 @@ namespace Pipe
             {
                 var now = candidate.Dequeue();
                 visted.Add(now);
+                var neighborVisited = 0;
+                var neighbor = GetNeighbor(puzzleType, (int)now.y);
+
                 var linkState = ListFunction.Get2DArrByVector2(pipe2D, now).connections;
-                var neighborVisted = 0;
-                foreach (var dir in Vector2List.FourDirection())
+                foreach (var dir in neighbor)
                 {
                     var next = now + dir;
-                    if (!InMap(next, new Vector2(pipe2D[0].Count, pipe2D.Count)))
+                    if (!InMap(pipe2D, next))
                         continue;
                     if (linkState[dir] && ListFunction.Get2DArrByVector2(pipe2D, now + dir)
                             .connections[dir * -1])
                     {
                         if (visted.Contains(next))
-                            neighborVisted += 1;
+                            neighborVisited += 1;
                         else
                             candidate.Enqueue(next);
                     }
                 }
 
-                if (neighborVisted > 1) pipeContain = PipeStatus.Cycling;
+                if (neighborVisited > 1) pipeContain = PipeStatus.Cycling;
             }
 
             List<List<PipeStatus>> waterPipe = new();
@@ -237,5 +130,238 @@ namespace Pipe
 
             return waterPipe;
         }
+
+        private List<Vector2> GetNeighbor(PuzzleType puzzleType, int x)
+        {
+            switch (puzzleType)
+            {
+                case PuzzleType.FOUR:
+                    return Vector2List.FourDirection();
+                case PuzzleType.SIX:
+                    return Vector2List.SixDirectionIn2DArray()[x % 2];
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
+            }
+        }
+
+        public GameFlow GetGameFlow()
+        {
+            return _gameFlow;
+        }
+
+        #region Camera
+
+        private Vector3 GetBoardCenterPosition(Vector3 boardLeftDown, Vector3 pipeSize, Vector2 mapSize,
+            PuzzleType puzzleType)
+        {
+            switch (puzzleType)
+            {
+                case PuzzleType.FOUR:
+                    return new Vector3(boardLeftDown.x + pipeData.pipeSize.x * pipeData.mapSize.x,
+                        boardLeftDown.y + pipeData.pipeSize.y * pipeData.mapSize.y, -20) / 2;
+                case PuzzleType.SIX:
+                    return boardLeftDown + GetBoardSize(pipeSize, mapSize, puzzleType) / 2;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
+            }
+        }
+
+        #region boardSize
+
+        private Vector3 GetBoardSize(Vector3 pipeSize, Vector2 mapSize, PuzzleType puzzleType)
+        {
+            return new Vector3(GetBoardWidth(pipeSize, mapSize, puzzleType),
+                GetBoardHeight(pipeSize, mapSize, puzzleType), -20);
+        }
+
+        private float GetBoardHeight(Vector3 pipeSize, Vector2 mapSize, PuzzleType puzzleType)
+        {
+            switch (puzzleType)
+            {
+                case PuzzleType.FOUR:
+                    return GetPipePositon(pipeSize, new Vector3(mapSize.x, mapSize.y, 0), puzzleType).y -
+                           GetPipePositon(pipeSize, new Vector3(0, 0, 0), puzzleType).y;
+                case PuzzleType.SIX:
+                    var height = GetPipePositon(pipeSize, new Vector3(0, mapSize.y, 0), puzzleType).y -
+                        GetPipePositon(pipeSize, new Vector3(0, 0, 0), puzzleType).x + pipeSize.y;
+                    return height;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
+            }
+        }
+
+        private float GetBoardWidth(Vector3 pipeSize, Vector2 mapSize, PuzzleType puzzleType)
+        {
+            switch (puzzleType)
+            {
+                case PuzzleType.FOUR:
+                    return GetPipePositon(pipeSize, new Vector3(mapSize.x, 1, 0), puzzleType).x -
+                           GetPipePositon(pipeSize, new Vector3(0, 0, 0), puzzleType).x;
+                case PuzzleType.SIX:
+                    var width = GetPipePositon(pipeSize, new Vector3(mapSize.x, 1, 0), puzzleType).x -
+                        GetPipePositon(pipeSize, new Vector3(0, 0, 0), puzzleType).x + pipeSize.x;
+                    return width;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
+            }
+        }
+
+        #endregion
+
+        private float GetCameraSize(Vector2 mapSize, Vector2 pipeSize, Vector2 cameraSize, float cameraAspect,
+            PuzzleType puzzleType)
+        {
+            var boardHeight = GetBoardHeight(pipeSize, mapSize, puzzleType);
+            var boardWidth = GetBoardWidth(pipeSize, mapSize, puzzleType);
+            if (boardHeight / boardWidth < cameraSize.y / cameraSize.x)
+                return GetBoardWidth(pipeSize, mapSize, puzzleType) / cameraAspect / 2;
+            return GetBoardHeight(pipeSize, mapSize, puzzleType) / 2;
+        }
+
+        #endregion
+
+        private Vector3 GetPipePositon(Vector3 pipeSize, Vector3 index,
+            PuzzleType puzzleType)
+        {
+            return GetPipePositon(Vector3.zero, pipeSize, index, puzzleType);
+        }
+
+        private Vector3 GetPipePositon(Vector3 boardLeftDown, Vector3 pipeSize, Vector3 index,
+            PuzzleType puzzleType)
+        {
+            switch (puzzleType)
+            {
+                case PuzzleType.FOUR:
+                    return
+                        boardLeftDown + VectorFunction.ElementWiseMultiply(index, pipeSize) + pipeSize / 2;
+                case PuzzleType.SIX:
+                    return boardLeftDown + VectorFunction.ElementWiseMultiply(pipeSize,
+                        new Vector3(index.x + 1 - 0.5f * (index.y % 2),
+                            0.5f / Mathf.Sin(30.0f / 180 * Mathf.PI) + index.y * Mathf.Cos(30.0f / 180 * Mathf.PI),
+                            index.z + 0.5f));
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
+            }
+        }
+
+        #endregion
+
+
+        #region Init
+
+        private void Awake()
+        {
+            pipeData.GameWin = false;
+        }
+
+        private void Start()
+        {
+            _camera = Camera.main;
+
+            _pipeGameObjects = new List<List<UnitPipeGameObject>>();
+            _pipe2D = ListFunction.Generate2DArrByVector2<UnitPipe>(pipeData.mapSize);
+            foreach (var (pipe1D, y) in _pipe2D.Select((value, i) => (value, i)))
+            foreach (var (pipe, x) in pipe1D.Select((value, i) => (value, i)))
+            {
+                pipe.SetPuzzleType(pipeData.puzzleType);
+                pipe.SetNeighbor(GetNeighbor(pipeData.puzzleType, y));
+            }
+
+            var init = new Vector2(Random.Range(0, (int)pipeData.mapSize.x - 1),
+                Random.Range(0, (int)pipeData.mapSize.y - 1));
+            _pipe2D = GenerateMap(_pipe2D, init, pipeData.puzzleType);
+            _waterSource = init;
+
+            foreach (var (pipe1d, y) in _pipe2D.Select((value, i) => (value, i)))
+            {
+                var list = new List<UnitPipeGameObject>();
+                foreach (var (pipe, x) in pipe1d.Select((value, i) => (value, i)))
+                {
+                    var np = Instantiate(pipePrefab, transform);
+                    np.transform.name = "pipe" + y + "-" + x;
+                    np.transform.position =
+                        GetPipePositon(pipeData.boardLeftDown, pipeData.pipeSize, new Vector3(x, y, 0),
+                            pipeData.puzzleType);
+                    var unitPipeGameObject = np.GetComponent<UnitPipeGameObject>();
+                    unitPipeGameObject.SetGameManager(this);
+                    unitPipeGameObject.SetPuzzleType(pipeData.puzzleType);
+                    unitPipeGameObject.SetUnitPipe(pipe);
+                    var ran = Random.Range(0, (int)pipeData.puzzleType);
+                    for (var i = 0; i < ran; i++) unitPipeGameObject.RotateOverClock(true);
+                    list.Add(unitPipeGameObject);
+                }
+
+                _pipeGameObjects.Add(list);
+            }
+
+            _gameFlow = GameFlow.START;
+        }
+
+        #endregion
+
+
+        #region generateMap
+
+        private List<List<UnitPipe>> GenerateMap(List<List<UnitPipe>> pipe2D, Vector2 init, PuzzleType puzzleType)
+        {
+            var visted = new List<Vector2>();
+            var candidate = new List<Vector2>();
+            candidate.Add(init);
+            var times = 0;
+            visted.Add(init);
+            while (candidate.Count != 0)
+            {
+                times++; //for save
+                if (times > pipe2D[0].Count * pipe2D.Count * 3) break;
+                var ran = Random.Range(0, candidate.Count);
+                var next = candidate[ran];
+                var output = "";
+                foreach (var c in candidate) output += c.ToString();
+                print(output);
+                candidate.RemoveRange(ran, 1);
+                var connectCandidate = GetConnectCandidate(next, pipe2D, visted, puzzleType);
+                if (connectCandidate.Count != 0)
+                {
+                    var ranConnection = Random.Range(0, connectCandidate.Count);
+                    ConnectPipeByDirection(pipe2D, next, connectCandidate[ranConnection]);
+                    visted.Add(next);
+                }
+
+                if (connectCandidate.Count != 0 || visted.Count == 1)
+                    foreach (var dir in GetNeighbor(puzzleType, (int)next.x))
+                        if (InMap(pipe2D, next + dir) &&
+                            !candidate.Contains(next + dir) &&
+                            !visted.Contains(next + dir))
+                            candidate.Add(next + dir);
+            }
+
+
+            return pipe2D;
+        }
+
+        private List<Vector2> GetConnectCandidate(Vector2 next, List<List<UnitPipe>> pipe2D, List<Vector2> visted,
+            PuzzleType puzzleType)
+        {
+            var connectCandidate = new List<Vector2>();
+            foreach (var dir in GetNeighbor(puzzleType, (int)next.y))
+            {
+                if (!InMap(pipe2D, next + dir)) continue;
+
+                if (visted.Contains(next + dir) &&
+                    ListFunction.Get2DArrByVector2(pipe2D, next + dir).GetNumOfConnection() < (int)puzzleType - 1)
+                    connectCandidate.Add(dir);
+            }
+
+            return connectCandidate;
+        }
+
+        private void ConnectPipeByDirection(List<List<UnitPipe>> pipe2D, Vector2 next, Vector2 dir)
+        {
+            ListFunction.Get2DArrByVector2(pipe2D, next).connections[dir] = true;
+            ListFunction.Get2DArrByVector2(pipe2D, next + dir)
+                .connections[dir * -1] = true;
+        }
+
+        #endregion
     }
 }
