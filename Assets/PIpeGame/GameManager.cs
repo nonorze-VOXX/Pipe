@@ -35,9 +35,12 @@ namespace Pipe
                     _gameFlow = GameFlow.PLAYING;
                     break;
                 case GameFlow.PLAYING:
+                    _camera.transform.position = GetCameraPosition(pipeData.boardLeftDown, pipeData.pipeSize,
+                        pipeData.mapSize, pipeData.puzzleType);
                     var orthographicSize = _camera.orthographicSize * 2;
                     var cameraSize = new Vector2(_camera.aspect, 1) * orthographicSize;
-                    _camera.orthographicSize = GetCameraSize(pipeData.mapSize, cameraSize, _camera.aspect);
+                    _camera.orthographicSize = GetCameraSize(pipeData.mapSize, pipeData.pipeSize, cameraSize,
+                        _camera.aspect, pipeData.puzzleType);
                     if (pipeData.GameWin)
                         _gameFlow = GameFlow.WIN;
                     break;
@@ -55,11 +58,22 @@ namespace Pipe
             return _gameFlow;
         }
 
-        private float GetCameraSize(Vector2 mapSize, Vector2 cameraSize, float cameraAspect)
+        private float GetCameraSize(Vector2 mapSize, Vector2 pipeSize, Vector2 cameraSize, float cameraAspect,
+            PuzzleType puzzleType)
         {
-            if (cameraSize.x > cameraSize.y)
-                return mapSize.y / 2;
-            return mapSize.x / cameraAspect / 2;
+            switch (puzzleType)
+            {
+                case PuzzleType.FOUR:
+                    if (cameraSize.x > cameraSize.y)
+                        return mapSize.y * pipeSize.y / 2;
+                    return mapSize.x * pipeSize.x / cameraAspect / 2;
+                case PuzzleType.SIX:
+                    if (cameraSize.x > cameraSize.y)
+                        return mapSize.y * pipeSize.y / 2;
+                    return (mapSize.x + 0.5f) * pipeSize.x / cameraAspect / 2;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
+            }
         }
 
         private Vector3 GetPipePositon(Vector3 pipeDataBoardLeftDown, Vector3 pipeSize, Vector3 index,
@@ -85,7 +99,6 @@ namespace Pipe
                     throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
             }
         }
-
         private bool InMap<T>(List<List<T>> list, Vector2 targetPosition)
         {
             try
@@ -175,6 +188,25 @@ namespace Pipe
             }
         }
 
+
+
+        private Vector3 GetCameraPosition(Vector3 boardLeftDown, Vector3 pipeSize, Vector2 mapSize,
+            PuzzleType puzzleType)
+        {
+            switch (puzzleType)
+            {
+                case PuzzleType.FOUR:
+                    return new Vector3(boardLeftDown.x + pipeData.pipeSize.x * pipeData.mapSize.x,
+                        boardLeftDown.y + pipeData.pipeSize.y * pipeData.mapSize.y, -20) / 2;
+                case PuzzleType.SIX:
+                    return new Vector3(boardLeftDown.x + pipeData.pipeSize.x * (pipeData.mapSize.x + 0.5f),
+                        boardLeftDown.y + pipeData.pipeSize.y * pipeData.mapSize.y, -20) / 2;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
+            }
+        }
+
+
         #region Init
 
         private void Awake()
@@ -185,8 +217,6 @@ namespace Pipe
         private void Start()
         {
             _camera = Camera.main;
-            _camera.transform.position = new Vector3(pipeData.pipeSize.x * pipeData.mapSize.x,
-                pipeData.pipeSize.y * pipeData.mapSize.y, -20) / 2;
 
             _pipeGameObjects = new List<List<UnitPipeGameObject>>();
             _pipe2D = ListFunction.Generate2DArrByVector2<UnitPipe>(pipeData.mapSize);
