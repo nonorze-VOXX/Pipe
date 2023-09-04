@@ -18,6 +18,7 @@ namespace Pipe
         Pipe = 0,
         Background = 1
     }
+
     public class UnitPipeGameObject : MonoBehaviour
     {
         private List<SpriteRenderer> _childSprites;
@@ -119,6 +120,7 @@ namespace Pipe
                     throw new ArgumentOutOfRangeException(nameof(s), s, null);
             }
 
+            if (_childSprites == null) return;
             foreach (var sprite in _childSprites)
                 sprite.color = color;
         }

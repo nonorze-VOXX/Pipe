@@ -320,9 +320,6 @@ namespace Pipe
                 if (times > pipe2D[0].Count * pipe2D.Count * 3) break;
                 var ran = Random.Range(0, candidate.Count);
                 var next = candidate[ran];
-                var output = "";
-                foreach (var c in candidate) output += c.ToString();
-                print(output);
                 candidate.RemoveRange(ran, 1);
                 var connectCandidate = GetConnectCandidate(next, pipe2D, visted, puzzleType);
                 if (connectCandidate.Count != 0)
