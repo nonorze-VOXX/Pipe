@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64174d588a284bb29355a76797b0f444, type: 3}
   m_Name: pipeData
   m_EditorClassIdentifier: 
-  mapSize: {x: 10, y: 10}
+  mapSize: {x: 11, y: 11}
   puzzleType: 6
   boardLeftDown: {x: 0, y: 0, z: 0}
   pipeSize: {x: 1, y: 1, z: 0}
