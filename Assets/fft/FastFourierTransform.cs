@@ -80,50 +80,5 @@ namespace fft
         {
             audioSource.GetSpectrumData(samples, 0, FFTWindow.Blackman);
         }
-
-
-        public static int BitReverse(int n, int bits)
-        {
-            var reversedN = n;
-            var count = bits - 1;
-
-            n >>= 1;
-            while (n > 0)
-            {
-                reversedN = (reversedN << 1) | (n & 1);
-                count--;
-                n >>= 1;
-            }
-
-            return (reversedN << count) & ((1 << bits) - 1);
-        }
-
-        // public static void FFT(Complex[] buffer)
-        // {
-        //     var bits = (int)Mathf.Log(buffer.Length, 2);
-        //     for (var i = 0; i < buffer.Length / 2; i++)
-        //     {
-        //         var swapPos = BitReverse(i, bits);
-        //         (buffer[i], buffer[swapPos]) = (buffer[swapPos], buffer[i]);
-        //     }
-        //
-        //     for (var N = 2; N < buffer.Length; N <<= 1)
-        //     for (var i = 0; i < buffer.Length; i += N)
-        //     for (var k = 0; k < N / 2; k++)
-        //     {
-        //         var evenIndex = i + k
-        //             ;
-        //         var oddIndex = i + k + N / 2
-        //             ;
-        //         var even = buffer[evenIndex];
-        //         var odd
-        //             = buffer[oddIndex];
-        //         double term = -2 * Mathf.PI * k / N;
-        //         var exp = new Complex(Mathf.Cos((float)term), Mathf.Sin((float)term)) * odd;
-        //
-        //         buffer[evenIndex] = even + exp;
-        //         buffer[oddIndex] = even - exp;
-        //     }
-        // }
     }
 }
