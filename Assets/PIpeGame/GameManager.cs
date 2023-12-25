@@ -151,6 +151,20 @@ namespace Pipe
 
         #region Camera
 
+        private float GetCameraSize(Vector2 mapSize, Vector2 pipeSize, Vector2 cameraSize, float cameraAspect,
+            PuzzleType puzzleType)
+        {
+            var boardHeight = GetBoardHeight(pipeSize, mapSize, puzzleType);
+            var boardWidth = GetBoardWidth(pipeSize, mapSize, puzzleType);
+            if (boardHeight / boardWidth < cameraSize.y / cameraSize.x)
+                return GetBoardWidth(pipeSize, mapSize, puzzleType) / cameraAspect / 2;
+            return GetBoardHeight(pipeSize, mapSize, puzzleType) / 2;
+        }
+
+        #endregion
+
+        #region boardInformation
+
         private Vector3 GetBoardCenterPosition(Vector3 boardLeftDown, Vector3 pipeSize, Vector2 mapSize,
             PuzzleType puzzleType)
         {
@@ -166,8 +180,6 @@ namespace Pipe
             }
         }
 
-        #region boardSize
-
         private Vector3 GetBoardSize(Vector3 pipeSize, Vector2 mapSize, PuzzleType puzzleType)
         {
             return new Vector3(GetBoardWidth(pipeSize, mapSize, puzzleType),
@@ -176,18 +188,21 @@ namespace Pipe
 
         private float GetBoardHeight(Vector3 pipeSize, Vector2 mapSize, PuzzleType puzzleType)
         {
+            float blockHeight;
             switch (puzzleType)
             {
                 case PuzzleType.FOUR:
-                    return GetPipePositon(pipeSize, new Vector3(mapSize.x, mapSize.y, 0), puzzleType).y -
-                           GetPipePositon(pipeSize, new Vector3(0, 0, 0), puzzleType).y;
+                    blockHeight = pipeSize.y;
+                    break;
                 case PuzzleType.SIX:
-                    var height = GetPipePositon(pipeSize, new Vector3(0, mapSize.y, 0), puzzleType).y -
-                        GetPipePositon(pipeSize, new Vector3(0, 0, 0), puzzleType).x + pipeSize.y;
-                    return height;
+                    blockHeight = pipeSize.x / Mathf.Cos(30.0f / 180 * Mathf.PI);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
             }
+
+            return GetPipePositon(pipeSize, new Vector3(mapSize.x - 1, mapSize.y - 1, 0), puzzleType).y -
+                GetPipePositon(pipeSize, new Vector3(0, 0, 0), puzzleType).y + blockHeight;
         }
 
         private float GetBoardWidth(Vector3 pipeSize, Vector2 mapSize, PuzzleType puzzleType)
@@ -208,17 +223,6 @@ namespace Pipe
 
         #endregion
 
-        private float GetCameraSize(Vector2 mapSize, Vector2 pipeSize, Vector2 cameraSize, float cameraAspect,
-            PuzzleType puzzleType)
-        {
-            var boardHeight = GetBoardHeight(pipeSize, mapSize, puzzleType);
-            var boardWidth = GetBoardWidth(pipeSize, mapSize, puzzleType);
-            if (boardHeight / boardWidth < cameraSize.y / cameraSize.x)
-                return GetBoardWidth(pipeSize, mapSize, puzzleType) / cameraAspect / 2;
-            return GetBoardHeight(pipeSize, mapSize, puzzleType) / 2;
-        }
-
-        #endregion
 
         private Vector3 GetPipePositon(Vector3 pipeSize, Vector3 index,
             PuzzleType puzzleType)
@@ -236,9 +240,10 @@ namespace Pipe
                         boardLeftDown + VectorFunction.ElementWiseMultiply(index, pipeSize) + pipeSize / 2;
                 case PuzzleType.SIX:
                     return boardLeftDown + VectorFunction.ElementWiseMultiply(pipeSize,
-                        new Vector3(index.x + 1 - 0.5f * (index.y % 2),
-                            0.5f / Mathf.Sin(30.0f / 180 * Mathf.PI) + index.y * Mathf.Cos(30.0f / 180 * Mathf.PI),
-                            index.z + 0.5f));
+                        new Vector3(index.x + pipeSize.x - pipeSize.x / 2 * (index.y % 2),
+                            pipeSize.y / 2 / Mathf.Cos(30.0f / 180 * Mathf.PI) +
+                            index.y * Mathf.Cos(30.0f / 180 * Mathf.PI),
+                            index.z));
                 default:
                     throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
             }
