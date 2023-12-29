@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using fft;
 using GameSetting;
 using General;
 using UnityEngine;
@@ -25,6 +26,7 @@ namespace Pipe
         private List<List<UnitPipe>> _pipe2D;
         private List<List<UnitPipeGameObject>> _pipeGameObjects;
         private Vector2 _waterSource;
+        private FastFourierTransform fft;
 
         private void Update()
         {
@@ -86,6 +88,7 @@ namespace Pipe
 
         private void Awake()
         {
+            fft = GetComponent<FastFourierTransform>();
             pipeData.GameWin = false;
         }
 
@@ -108,6 +111,7 @@ namespace Pipe
             _waterSource = init;
 
             UnitPipeToGameObject(true);
+            fft.SetPipeGameObjects(_pipeGameObjects);
 
             _gameFlow = GameFlow.START;
         }
