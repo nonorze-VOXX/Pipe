@@ -82,6 +82,38 @@ namespace Pipe
             if (connected == (int)pipeData.mapSize.y * (int)pipeData.mapSize.x) pipeData.GameWin = true;
         }
 
+        #region Init
+
+        private void Awake()
+        {
+            pipeData.GameWin = false;
+        }
+
+        private void Start()
+        {
+            _camera = Camera.main;
+
+            _pipeGameObjects = new List<List<UnitPipeGameObject>>();
+            _pipe2D = ListFunction.Generate2DArrByVector2<UnitPipe>(pipeData.mapSize);
+            foreach (var (pipe1D, y) in _pipe2D.Select((value, i) => (value, i)))
+            foreach (var (pipe, x) in pipe1D.Select((value, i) => (value, i)))
+            {
+                pipe.SetPuzzleType(pipeData.puzzleType);
+                pipe.SetNeighbor(GetNeighbor(pipeData.puzzleType, y));
+            }
+
+            var init = new Vector2(Random.Range(0, (int)pipeData.mapSize.x - 1),
+                Random.Range(0, (int)pipeData.mapSize.y - 1));
+            _pipe2D = GenerateMap(_pipe2D, init, pipeData.puzzleType);
+            _waterSource = init;
+
+            UnitPipeToGameObject(true);
+
+            _gameFlow = GameFlow.START;
+        }
+
+        #endregion
+
 
         #region Getter
 
@@ -252,31 +284,10 @@ namespace Pipe
         #endregion
 
 
-        #region Init
+        #region generateMap
 
-        private void Awake()
+        private void UnitPipeToGameObject(bool randomRotate)
         {
-            pipeData.GameWin = false;
-        }
-
-        private void Start()
-        {
-            _camera = Camera.main;
-
-            _pipeGameObjects = new List<List<UnitPipeGameObject>>();
-            _pipe2D = ListFunction.Generate2DArrByVector2<UnitPipe>(pipeData.mapSize);
-            foreach (var (pipe1D, y) in _pipe2D.Select((value, i) => (value, i)))
-            foreach (var (pipe, x) in pipe1D.Select((value, i) => (value, i)))
-            {
-                pipe.SetPuzzleType(pipeData.puzzleType);
-                pipe.SetNeighbor(GetNeighbor(pipeData.puzzleType, y));
-            }
-
-            var init = new Vector2(Random.Range(0, (int)pipeData.mapSize.x - 1),
-                Random.Range(0, (int)pipeData.mapSize.y - 1));
-            _pipe2D = GenerateMap(_pipe2D, init, pipeData.puzzleType);
-            _waterSource = init;
-
             foreach (var (pipe1d, y) in _pipe2D.Select((value, i) => (value, i)))
             {
                 var list = new List<UnitPipeGameObject>();
@@ -291,21 +302,18 @@ namespace Pipe
                     unitPipeGameObject.SetGameManager(this);
                     unitPipeGameObject.SetPuzzleType(pipeData.puzzleType);
                     unitPipeGameObject.SetUnitPipe(pipe);
-                    var ran = Random.Range(0, (int)pipeData.puzzleType);
-                    for (var i = 0; i < ran; i++) unitPipeGameObject.RotateOverClock(true);
+                    if (randomRotate)
+                    {
+                        var ran = Random.Range(0, (int)pipeData.puzzleType);
+                        for (var i = 0; i < ran; i++) unitPipeGameObject.RotateOverClock(true);
+                    }
+
                     list.Add(unitPipeGameObject);
                 }
 
                 _pipeGameObjects.Add(list);
             }
-
-            _gameFlow = GameFlow.START;
         }
-
-        #endregion
-
-
-        #region generateMap
 
         private List<List<UnitPipe>> GenerateMap(List<List<UnitPipe>> pipe2D, Vector2 init, PuzzleType puzzleType)
         {

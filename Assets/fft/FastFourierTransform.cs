@@ -78,7 +78,7 @@ namespace fft
 
         private void GetAudio()
         {
-            audioSource.GetSpectrumData(samples, 0, FFTWindow.Blackman);
+            audioSource.GetSpectrumData(samples, 0, FFTWindow.BlackmanHarris);
         }
     }
 }

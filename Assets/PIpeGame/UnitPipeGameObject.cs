@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using fft;
 using GameSetting;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -19,8 +20,9 @@ namespace Pipe
         Background = 1
     }
 
-    public class UnitPipeGameObject : MonoBehaviour
+    public class UnitPipeGameObject : MonoBehaviour, ISoundTriggerable
     {
+        private readonly float triggerColdDown = 0.3f;
         private List<SpriteRenderer> _childSprites;
         private GameManager _gameManager;
         private UnitPipe _originUnitPipe;
@@ -28,6 +30,8 @@ namespace Pipe
         private List<GameObject> _pipeLine;
 
         private PuzzleType _puzzleType;
+
+        private float triggerTimer = float.MaxValue;
         // private int rotationTimes;
 
         private void Awake()
@@ -72,20 +76,51 @@ namespace Pipe
             }
         }
 
+        private void Update()
+        {
+            SoundUpdate();
+        }
+
         private void OnMouseDown()
         {
             if (_gameManager.GetGameFlow() == GameFlow.WIN) return;
+            if (IsTrigger()) return;
             // rotationTimes = (rotationTimes + 1) % (int)_puzzleType;
 
-            transform.Rotate(new Vector3(0, 0, 360.0f / _originUnitPipe.GetNeighbor().Count));
-            RotateOverClock(true);
+            Trigger();
             _gameManager.UpdatePipe();
         }
+
+        public void Trigger()
+        {
+            triggerTimer = 0;
+            RotateOverClock(true);
+        }
+
+        public void SoundUpdate()
+        {
+            if (triggerTimer <= triggerColdDown)
+            {
+                triggerTimer += Time.deltaTime;
+
+                var rotateAngle = 360.0f / _originUnitPipe.GetNeighbor().Count;
+                var timePercent = Time.deltaTime / triggerColdDown;
+                transform.Rotate(new Vector3(0, 0, rotateAngle * timePercent));
+            }
+        }
+
+        public bool IsTrigger()
+        {
+            return triggerTimer <= triggerColdDown;
+        }
+
 
         public void RotateOverClock(bool b)
         {
             _originUnitPipe.RotateOverClock(b);
         }
+
+        #region setter
 
         public void SetGameManager(GameManager gameManager)
         {
@@ -124,5 +159,7 @@ namespace Pipe
             foreach (var sprite in _childSprites)
                 sprite.color = color;
         }
+
+        #endregion
     }
 }
