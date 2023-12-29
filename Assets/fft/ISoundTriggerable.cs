@@ -1,8 +1,10 @@
-﻿namespace fft
+﻿using UnityEngine;
+
+namespace fft
 {
     public interface ISoundTriggerable
     {
-        void Trigger();
+        void Trigger(Color color);
         void SoundUpdate();
         bool IsTrigger();
     }

@@ -15,6 +15,7 @@ namespace fft
         private readonly List<GameObject> cubes = new();
         private readonly List<SpriteRenderer> leds = new();
         private readonly float[] samples = new float[512];
+        private List<Color> _colors;
 
         private List<List<UnitPipeGameObject>> _pipeGameObjects;
         private AudioSource audioSource;
@@ -23,6 +24,10 @@ namespace fft
 
         private void Start()
         {
+            _colors = new List<Color>();
+            _colors.Add(Color.red);
+            _colors.Add(Color.green);
+            _colors.Add(Color.blue);
             audioSource = GetComponent<AudioSource>();
             cubeSprite = cube.GetComponent<SpriteRenderer>();
             if (cubeShow)
@@ -83,18 +88,18 @@ namespace fft
                         leds[index].color = Color.white;
                 if (_pipeGameObjects != null)
                     if (result * 1000 > filter.threshold)
-                        SpinPipe(_pipeGameObjects);
+                        SpinPipe(_pipeGameObjects, _colors[index]);
                 index++;
             }
         }
 
-        private void SpinPipe(List<List<UnitPipeGameObject>> pipeGameObjects)
+        private void SpinPipe(List<List<UnitPipeGameObject>> pipeGameObjects, Color color)
         {
             foreach (var pipe1d in pipeGameObjects)
             foreach (var pipe in pipe1d)
             {
                 if (pipe.IsTrigger()) continue;
-                pipe.Trigger();
+                pipe.Trigger(color);
                 return;
             }
         }

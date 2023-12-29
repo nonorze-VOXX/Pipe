@@ -22,14 +22,17 @@ namespace Pipe
 
     public class UnitPipeGameObject : MonoBehaviour, ISoundTriggerable
     {
-        private readonly float triggerColdDown = 0.3f;
+        private readonly float triggerColdDown = 0.1f;
         private List<SpriteRenderer> _childSprites;
+        private float _fromAngle;
         private GameManager _gameManager;
         private UnitPipe _originUnitPipe;
         private GameObject _pipeEnd;
         private List<GameObject> _pipeLine;
 
         private PuzzleType _puzzleType;
+
+        private float _toAngle;
 
         private float triggerTimer = float.MaxValue;
         // private int rotationTimes;
@@ -87,13 +90,17 @@ namespace Pipe
             if (IsTrigger()) return;
             // rotationTimes = (rotationTimes + 1) % (int)_puzzleType;
 
-            Trigger();
+            Trigger(Color.white);
             _gameManager.UpdatePipe();
         }
 
-        public void Trigger()
+        public void Trigger(Color color)
         {
             triggerTimer = 0;
+            _fromAngle = transform.rotation.eulerAngles.z;
+            _toAngle = transform.rotation.eulerAngles.z + 360.0f / _originUnitPipe.GetNeighbor().Count;
+            ;
+            changeBgColor(color);
             RotateOverClock(true);
         }
 
@@ -102,16 +109,25 @@ namespace Pipe
             if (triggerTimer <= triggerColdDown)
             {
                 triggerTimer += Time.deltaTime;
-
-                var rotateAngle = 360.0f / _originUnitPipe.GetNeighbor().Count;
-                var timePercent = Time.deltaTime / triggerColdDown;
-                transform.Rotate(new Vector3(0, 0, rotateAngle * timePercent));
+                var timePercent = triggerTimer / triggerColdDown;
+                var rotation = transform.rotation.eulerAngles;
+                rotation.z = Mathf.Lerp(_fromAngle, _toAngle, timePercent);
+                transform.rotation = Quaternion.Euler(rotation);
+            }
+            else
+            {
+                changeBgColor(Color.white);
             }
         }
 
         public bool IsTrigger()
         {
             return triggerTimer <= triggerColdDown;
+        }
+
+        private void changeBgColor(Color color)
+        {
+            for (var i = 1; i < _childSprites.Count; i++) _childSprites[i].color = color;
         }
 
 
