@@ -31,10 +31,11 @@ namespace Pipe
     {
         private readonly float spinTime = 0.1f;
         private readonly float triggerColdDown = 5f;
-        private List<SpriteRenderer> _childSprites;
+        private List<SpriteRenderer> _bgChildSprites;
         private float _fromAngle;
         private GameManager _gameManager;
         private UnitPipe _originUnitPipe;
+        private List<SpriteRenderer> _pipeChildSprites;
         private GameObject _pipeEnd;
 
         private List<GameObject> _pipeLine;
@@ -55,14 +56,14 @@ namespace Pipe
             _pipeLine = new List<GameObject>();
             _pipeLine.Add(transform.GetChild(1).GameObject());
             _pipeEnd = transform.GetChild(0).GameObject();
-            SetPipeViewStatus(PipeViewStatus.Normal);
         }
 
         private void Start()
         {
             var angle = 360 / (int)_puzzleType;
             _pipeEnd.SetActive(_originUnitPipe.GetNumOfConnection() == 1);
-            _childSprites = new List<SpriteRenderer>();
+            _pipeChildSprites = new List<SpriteRenderer>();
+            _bgChildSprites = new List<SpriteRenderer>();
             for (var i = 1; i < (int)_puzzleType; i++)
             {
                 var line = Instantiate(transform.GetChild(1).GameObject(), transform);
@@ -72,8 +73,11 @@ namespace Pipe
 
             var count = transform.childCount;
             for (var i = 1; i < count; i++)
-                _childSprites.Add(
+            {
+                _bgChildSprites.Add(
                     transform.GetChild(i).GetChild(1).GetChild(0).GetComponent<SpriteRenderer>());
+                _pipeChildSprites.Add(transform.GetChild(i).transform.GetChild(0).GetComponent<SpriteRenderer>());
+            }
 
             var index = 1;
             foreach (var up in _originUnitPipe.GetNeighbor())
@@ -92,6 +96,8 @@ namespace Pipe
 
                 index++;
             }
+
+            SetPipeViewStatus(PipeViewStatus.Normal);
         }
 
         private void Update()
@@ -146,12 +152,12 @@ namespace Pipe
 
         public void ChangeOneBgColor(Color color)
         {
-            for (var i = 0; i < _childSprites.Count; i++) _childSprites[i].color = color;
+            for (var i = 0; i < _bgChildSprites.Count; i++) _bgChildSprites[i].color = color;
         }
 
         private void changeBgColor(Color color)
         {
-            for (var i = 0; i < _childSprites.Count; i++) _childSprites[i].color = color;
+            for (var i = 0; i < _bgChildSprites.Count; i++) _bgChildSprites[i].color = color;
         }
 
 
@@ -235,8 +241,8 @@ namespace Pipe
                     throw new ArgumentOutOfRangeException(nameof(s), s, null);
             }
 
-            if (_childSprites == null) return;
-            foreach (var sprite in _childSprites)
+            if (_pipeChildSprites == null) return;
+            foreach (var sprite in _pipeChildSprites)
                 sprite.color = color;
         }
 
