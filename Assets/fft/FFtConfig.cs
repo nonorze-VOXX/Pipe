@@ -10,6 +10,12 @@ namespace fft
         max
     }
 
+    public enum ShowType
+    {
+        Note,
+        slide
+    }
+
     [Serializable]
     public struct FilterConfig
     {
@@ -21,6 +27,7 @@ namespace fft
         public float tolerance;
         public float cd;
         public bool active;
+        public ShowType showType;
     }
 
     [CreateAssetMenu(fileName = "fftConfig", menuName = "fftConfig", order = 0)]

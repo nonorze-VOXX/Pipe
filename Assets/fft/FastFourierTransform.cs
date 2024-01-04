@@ -11,6 +11,7 @@ namespace fft
     {
         public float time;
         public Vector2 position;
+        public Vector2 direction;
     }
 
     [RequireComponent(typeof(AudioSource))]
@@ -136,7 +137,7 @@ namespace fft
                             leds[index].color = Color.white;
                     if (_pipeGameObjects != null)
                         if (trigger)
-                            SpinPipe(_pipeGameObjects, _filterLastStates, _colors, index);
+                            SpinPipe(_pipeGameObjects, _filterLastStates, _colors, index, filter);
                 }
 
                 index++;
@@ -144,28 +145,79 @@ namespace fft
         }
 
         private void SpinPipe(List<List<UnitPipeGameObject>> pipeGameObjects, List<LastState> filterLastTime,
-            List<Color> color, int index)
+            List<Color> color, int index, FilterConfig filterConfig)
         {
             var lastState = filterLastTime[index];
             var filterDeltaTime = Time.time - lastState.time;
             lastState.time = Time.time;
-
+            if (_unusedPipes.Count == 0) return;
             UnitPipeGameObject nextPipe;
-            if (filterDeltaTime < 0.3f && _unusedPipes.Count > 0)
+            switch (filterConfig.showType)
             {
-                nextPipe = _unusedPipes[0];
-                foreach (var pipeGameObject in _unusedPipes)
-                    if (
-                        Vector2.Distance(lastState.position, pipeGameObject.transform.position)
-                        < Vector2.Distance(nextPipe.transform.position, lastState.position)
-                    )
-                        nextPipe = pipeGameObject;
+                case ShowType.Note:
+                    if (filterDeltaTime < 0.3f)
+                    {
+                        nextPipe = _unusedPipes[0];
+                        foreach (var pipeGameObject in _unusedPipes)
+                            if (
+                                Vector2.Distance(lastState.position, pipeGameObject.transform.position)
+                                < Vector2.Distance(nextPipe.transform.position, lastState.position)
+                            )
+                                nextPipe = pipeGameObject;
+                    }
+                    else
+                    {
+                        var random = Random.Range(0, _unusedPipes.Count);
+                        nextPipe = _unusedPipes[random];
+                    }
+
+                    break;
+                case ShowType.slide:
+                    if (filterDeltaTime > 1f)
+                    {
+                        var random = Random.Range(0, _unusedPipes.Count);
+                        nextPipe = _unusedPipes[random];
+                        random = Random.Range(0, _unusedPipes.Count);
+                        lastState.direction = _unusedPipes[random].transform.position - nextPipe.transform.position;
+                    }
+                    else
+                    {
+                        var triggered = false;
+                        var minPipe = _unusedPipes[0];
+                        var maxPipe = _unusedPipes[0];
+                        foreach (var pipeGameObject in _unusedPipes)
+                        {
+                            if (
+                                Vector2.Distance(lastState.position + lastState.direction,
+                                    pipeGameObject.transform.position)
+                                <= Vector2.Distance(minPipe.transform.position,
+                                    lastState.position + lastState.direction)
+                            )
+                            {
+                                minPipe = pipeGameObject;
+                                triggered = true;
+                            }
+
+                            if (
+                                Vector2.Distance(lastState.position + lastState.direction,
+                                    pipeGameObject.transform.position)
+                                > Vector2.Distance(maxPipe.transform.position,
+                                    lastState.position + lastState.direction)
+                            )
+                                maxPipe = pipeGameObject;
+                        }
+
+                        if (triggered)
+                            nextPipe = minPipe;
+                        else
+                            nextPipe = maxPipe;
+                    }
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            else
-            {
-                var random = Random.Range(0, _unusedPipes.Count);
-                nextPipe = _unusedPipes[random];
-            }
+
 
             _unusedPipes.Remove(nextPipe);
             _usedPipes.Add(nextPipe);
@@ -178,20 +230,46 @@ namespace fft
 
         private bool IsTrigger(int i, float result, FilterConfig filter, float timer)
         {
-            var nowVolumn = result * 1000;
-            if (_trigger[i])
+            switch (filter.showType)
             {
-                //var leftTrigger = nowVolumn < filter.threshold * (1 + filter.tolerance / 100);
-                var rightTrigger = nowVolumn > filter.threshold * (1 - filter.tolerance / 100);
-                _trigger[i] = rightTrigger;
-                return false;
-            }
+                case ShowType.Note:
+                {
+                    var nowVolumn = result * 1000;
+                    if (_trigger[i])
+                    {
+                        //var leftTrigger = nowVolumn < filter.threshold * (1 + filter.tolerance / 100);
+                        var rightTrigger = nowVolumn > filter.threshold * (1 - filter.tolerance / 100);
+                        _trigger[i] = rightTrigger;
+                        return false;
+                    }
 
-            if (timer < filter.cd)
-                _trigger[i] = false;
-            else
-                _trigger[i] = nowVolumn > filter.threshold;
-            return _trigger[i];
+                    if (timer < filter.cd)
+                        _trigger[i] = false;
+                    else
+                        _trigger[i] = nowVolumn > filter.threshold;
+                    return _trigger[i];
+                }
+                    break;
+                case ShowType.slide:
+                {
+                    var nowVolumn = result * 1000;
+                    if (_trigger[i])
+                    {
+                        var rightTrigger = nowVolumn > filter.threshold * (1 - filter.tolerance / 100);
+                        _trigger[i] = rightTrigger;
+                    }
+
+                    if (timer < filter.cd)
+                        _trigger[i] = false;
+                    else
+                        _trigger[i] = nowVolumn > filter.threshold;
+
+                    return _trigger[i];
+                }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
 
