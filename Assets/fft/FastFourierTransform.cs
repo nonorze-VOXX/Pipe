@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameSetting;
 using Pipe;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -26,23 +27,27 @@ namespace fft
         private readonly List<GameObject> cubes = new();
         private readonly List<SpriteRenderer> leds = new();
         private readonly float[] samples = new float[512];
+        private UnitPipeGameObject _AOECenter;
         private List<float> _cdTimer;
         private List<Color> _colors;
         private List<LastState> _filterLastStates;
+        private List<Vector2> _neighbor;
 
         private List<List<UnitPipeGameObject>> _pipeGameObjects;
         private List<bool> _trigger;
+        private Color AOEColor;
+        private float AOETimer;
         private AudioSource audioSource;
 
         private SpriteRenderer cubeSprite;
 
         private void Start()
         {
-            cubeShow = true;
             _colors = new List<Color>();
             _colors.Add(Color.red);
             _colors.Add(Color.green);
             _colors.Add(Color.blue);
+            _colors.Add(Color.yellow);
             audioSource = GetComponent<AudioSource>();
             cubeSprite = cube.GetComponent<SpriteRenderer>();
             if (cubeShow)
@@ -85,18 +90,7 @@ namespace fft
 
         private void Update()
         {
-            // if (audioSource.time >= audioSource.clip.length)
-            // {
-            //     foreach (var pipe1D in _pipeGameObjects)
-            //     {
-            //         foreach (var pipe in pipe1D)
-            //         {
-            //             pipe.Get
-            //         }
-            //         
-            //     }
-            //     return;
-            // }
+            UpdateAOE();
             for (var i = 0; i < _cdTimer.Count; i++) _cdTimer[i] += Time.deltaTime;
             var willRemove = new List<UnitPipeGameObject>();
             foreach (var pipe in _usedPipes)
@@ -153,6 +147,66 @@ namespace fft
                 }
 
                 index++;
+            }
+        }
+
+        private void UpdateAOE()
+        {
+            if (_AOECenter != null)
+            {
+                AOETimer += 1;
+                var list = FindPipeByDistance(_AOECenter, AOETimer);
+                foreach (var pipe in list) pipe.Trigger(AOEColor);
+                // foreach (var pipe in list) pipe.ChangeOneBgColor(AOEColor);
+                if (AOETimer >= _pipeGameObjects.Count * 2) _AOECenter = null;
+                ;
+            }
+        }
+
+        private List<UnitPipeGameObject> FindPipeByDistance(UnitPipeGameObject center,
+            float distance)
+        {
+            var ans = new List<UnitPipeGameObject>();
+            foreach (var pipes in _pipeGameObjects)
+            foreach (var pipe in pipes)
+                if (
+                    Vector2.Distance(pipe.transform.position, center.transform.position) <
+                    distance + 0.5f &&
+                    Vector2.Distance(pipe.transform.position, center.transform.position) >
+                    distance - 0.5f
+                )
+                    ans.Add(pipe);
+            return ans;
+        }
+
+        public void SetPuzzleType(PuzzleType puzzleType)
+        {
+            switch (puzzleType)
+            {
+                case PuzzleType.FOUR:
+                    _neighbor = new List<Vector2>
+                    {
+                        Vector2.right,
+                        Vector2.up,
+                        Vector2.left,
+                        Vector2.down
+                    };
+                    break;
+                case PuzzleType.SIX:
+                    _neighbor = new List<Vector2>
+                    {
+                        Vector2.right,
+                        new(1, 1),
+                        Vector2.up,
+                        new(-1, 1),
+                        Vector2.left,
+                        new(-1, -1),
+                        Vector2.down,
+                        new(1, -1)
+                    };
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(puzzleType), puzzleType, null);
             }
         }
 
@@ -226,6 +280,15 @@ namespace fft
                     }
 
                     break;
+                case ShowType.AOE:
+                    if (_AOECenter != null) return;
+                    var ran = Random.Range(0, _unusedPipes.Count);
+                    var pipe = _unusedPipes[ran];
+                    AOEColor = _colors[index];
+                    pipe.ChangeOneBgColor(_colors[index]);
+                    _AOECenter = pipe;
+                    AOETimer = 0;
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -261,7 +324,24 @@ namespace fft
                         _trigger[i] = nowVolumn > filter.threshold;
                     return _trigger[i];
                 }
-                    break;
+
+                case ShowType.AOE:
+                {
+                    var nowVolumn = result * 1000;
+                    if (_trigger[i])
+                    {
+                        //var leftTrigger = nowVolumn < filter.threshold * (1 + filter.tolerance / 100);
+                        var rightTrigger = nowVolumn > filter.threshold * (1 - filter.tolerance / 100);
+                        _trigger[i] = rightTrigger;
+                        return false;
+                    }
+
+                    if (timer < filter.cd)
+                        _trigger[i] = false;
+                    else
+                        _trigger[i] = nowVolumn > filter.threshold;
+                    return _trigger[i];
+                }
                 case ShowType.slide:
                 {
                     var nowVolumn = result * 1000;

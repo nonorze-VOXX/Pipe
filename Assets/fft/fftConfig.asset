@@ -20,7 +20,7 @@ MonoBehaviour:
     type: 1
     tolerance: 21.67
     cd: 0
-    active: 0
+    active: 1
     showType: 0
   - endIndex: 100
     name: main slide
@@ -28,8 +28,8 @@ MonoBehaviour:
     threshold: 37
     type: 1
     tolerance: 20
-    cd: 0.001
-    active: 1
+    cd: 0.01
+    active: 0
     showType: 1
   - endIndex: 3
     name: drum
@@ -43,10 +43,10 @@ MonoBehaviour:
   - endIndex: 6
     name: big drum
     startIndex: 0
-    threshold: 130.4
+    threshold: 42.8
     type: 1
-    tolerance: 57.18
+    tolerance: 35.4
     cd: 0.1
     active: 0
-    showType: 0
-  startTime: 100
+    showType: 2
+  startTime: 30

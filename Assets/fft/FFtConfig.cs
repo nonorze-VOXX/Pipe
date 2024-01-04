@@ -13,7 +13,8 @@ namespace fft
     public enum ShowType
     {
         Note,
-        slide
+        slide,
+        AOE
     }
 
     [Serializable]

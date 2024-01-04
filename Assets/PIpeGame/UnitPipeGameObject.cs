@@ -149,6 +149,10 @@ namespace Pipe
             for (var i = 0; i < _childSprites.Count; i++) _childSprites[i].color = color;
         }
 
+        public void ChangeOneBgColor(Color color)
+        {
+            _childSprites[0].color = color;
+        }
 
         public void RotateOverClock(bool b)
         {

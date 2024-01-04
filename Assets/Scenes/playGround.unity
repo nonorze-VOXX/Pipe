@@ -236,8 +236,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd95b6977c3441b99a6b58f6c492389e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cube: {fileID: 400408654427977668, guid: d7a77c0c82802cd4588579a8783bf64b, type: 3}
+  cubePrefab: {fileID: 400408654427977668, guid: d7a77c0c82802cd4588579a8783bf64b, type: 3}
   recorderSetting: {fileID: 11400000, guid: f59a8449de39af44aaf0358e8e54e360, type: 2}
+  pastCube: {fileID: 0}
 --- !u!4 &1025328182
 Transform:
   m_ObjectHideFlags: 0

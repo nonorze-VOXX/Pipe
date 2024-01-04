@@ -112,6 +112,7 @@ namespace Pipe
 
             UnitPipeToGameObject(true);
             fft.SetPipeGameObjects(_pipeGameObjects);
+            fft.SetPuzzleType(pipeData.puzzleType);
 
             _gameFlow = GameFlow.START;
         }
