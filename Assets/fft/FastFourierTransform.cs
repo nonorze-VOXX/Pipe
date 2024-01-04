@@ -3,9 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Pipe;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace fft
 {
+    internal struct LastState
+    {
+        public float time;
+        public Vector2 position;
+    }
+
     [RequireComponent(typeof(AudioSource))]
     public class FastFourierTransform : MonoBehaviour
     {
@@ -13,11 +20,14 @@ namespace fft
         public FFtConfig fFtConfig;
         public bool cubeShow;
         public Recorder recorder;
+        private readonly List<UnitPipeGameObject> _unusedPipes = new();
+        private readonly List<UnitPipeGameObject> _usedPipes = new();
         private readonly List<GameObject> cubes = new();
         private readonly List<SpriteRenderer> leds = new();
         private readonly float[] samples = new float[512];
         private List<float> _cdTimer;
         private List<Color> _colors;
+        private List<LastState> _filterLastStates;
 
         private List<List<UnitPipeGameObject>> _pipeGameObjects;
         private List<bool> _trigger;
@@ -47,10 +57,15 @@ namespace fft
             var y = -2;
             _trigger = new List<bool>();
             _cdTimer = new List<float>();
+            _filterLastStates = new List<LastState>();
             foreach (var filter in fFtConfig.filterConfigs)
             {
                 _trigger.Add(false);
                 _cdTimer.Add(0);
+                var lastState = new LastState();
+                lastState.time = Time.time;
+                lastState.position = Vector2.zero;
+                _filterLastStates.Add(lastState);
             }
 
             if (cubeShow)
@@ -70,6 +85,16 @@ namespace fft
         private void Update()
         {
             for (var i = 0; i < _cdTimer.Count; i++) _cdTimer[i] += Time.deltaTime;
+            var willRemove = new List<UnitPipeGameObject>();
+            foreach (var pipe in _usedPipes)
+                if (!pipe.IsTrigger())
+                    willRemove.Add(pipe);
+
+            foreach (var pipe in willRemove)
+            {
+                _usedPipes.Remove(pipe);
+                _unusedPipes.Add(pipe);
+            }
 
             GetAudio();
             if (cubeShow)
@@ -111,11 +136,44 @@ namespace fft
                             leds[index].color = Color.white;
                     if (_pipeGameObjects != null)
                         if (trigger)
-                            SpinPipe(_pipeGameObjects, _colors[index]);
+                            SpinPipe(_pipeGameObjects, _filterLastStates, _colors, index);
                 }
 
                 index++;
             }
+        }
+
+        private void SpinPipe(List<List<UnitPipeGameObject>> pipeGameObjects, List<LastState> filterLastTime,
+            List<Color> color, int index)
+        {
+            var lastState = filterLastTime[index];
+            var filterDeltaTime = Time.time - lastState.time;
+            lastState.time = Time.time;
+
+            UnitPipeGameObject nextPipe;
+            if (filterDeltaTime < 0.3f && _unusedPipes.Count > 0)
+            {
+                nextPipe = _unusedPipes[0];
+                foreach (var pipeGameObject in _unusedPipes)
+                    if (
+                        Vector2.Distance(lastState.position, pipeGameObject.transform.position)
+                        < Vector2.Distance(nextPipe.transform.position, lastState.position)
+                    )
+                        nextPipe = pipeGameObject;
+            }
+            else
+            {
+                var random = Random.Range(0, _unusedPipes.Count);
+                nextPipe = _unusedPipes[random];
+            }
+
+            _unusedPipes.Remove(nextPipe);
+            _usedPipes.Add(nextPipe);
+            nextPipe.Trigger(color[index]);
+            lastState.position = nextPipe.transform.position;
+
+
+            filterLastTime[index] = lastState;
         }
 
         private bool IsTrigger(int i, float result, FilterConfig filter, float timer)
@@ -126,7 +184,7 @@ namespace fft
                 //var leftTrigger = nowVolumn < filter.threshold * (1 + filter.tolerance / 100);
                 var rightTrigger = nowVolumn > filter.threshold * (1 - filter.tolerance / 100);
                 _trigger[i] = rightTrigger;
-                return _trigger[i];
+                return false;
             }
 
             if (timer < filter.cd)
@@ -137,17 +195,6 @@ namespace fft
         }
 
 
-        private void SpinPipe(List<List<UnitPipeGameObject>> pipeGameObjects, Color color)
-        {
-            foreach (var pipe1d in pipeGameObjects)
-            foreach (var pipe in pipe1d)
-            {
-                if (pipe.IsTrigger()) continue;
-                pipe.Trigger(color);
-                return;
-            }
-        }
-
         private void GetAudio()
         {
             audioSource.GetSpectrumData(samples, 0, FFTWindow.BlackmanHarris);
@@ -156,6 +203,9 @@ namespace fft
         public void SetPipeGameObjects(List<List<UnitPipeGameObject>> pipeGameObjects)
         {
             _pipeGameObjects = pipeGameObjects;
+            foreach (var pipe1d in pipeGameObjects)
+            foreach (var pipe in pipe1d)
+                _unusedPipes.Add(pipe);
         }
     }
 }
