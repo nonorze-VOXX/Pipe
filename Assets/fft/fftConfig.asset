@@ -28,7 +28,7 @@ MonoBehaviour:
     threshold: 37
     type: 1
     tolerance: 20
-    cd: 0
+    cd: 0.001
     active: 1
     showType: 1
   - endIndex: 3
@@ -49,4 +49,4 @@ MonoBehaviour:
     cd: 0.1
     active: 0
     showType: 0
-  startTime: 30
+  startTime: 100

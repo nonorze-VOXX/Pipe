@@ -7,6 +7,13 @@ using UnityEngine;
 
 namespace Pipe
 {
+    public enum PipeViewStatus
+    {
+        Spinning,
+        ColdDown,
+        Normal
+    }
+
     public enum PipeStatus
     {
         Watered,
@@ -29,7 +36,11 @@ namespace Pipe
         private GameManager _gameManager;
         private UnitPipe _originUnitPipe;
         private GameObject _pipeEnd;
+
         private List<GameObject> _pipeLine;
+        // private int rotationTimes;
+
+        private PipeViewStatus _pipeViewStatus = PipeViewStatus.Normal;
 
         private PuzzleType _puzzleType;
 
@@ -37,7 +48,6 @@ namespace Pipe
         private float spinTimer = float.MaxValue;
 
         private float triggerTimer = float.MaxValue;
-        // private int rotationTimes;
 
         private void Awake()
         {
@@ -105,8 +115,7 @@ namespace Pipe
             _fromAngle = transform.rotation.eulerAngles.z;
             _toAngle = transform.rotation.eulerAngles.z + 360.0f / _originUnitPipe.GetNeighbor().Count;
             ;
-            changeBgColor(color);
-            RotateOverClock(true);
+            SetPipeViewStatus(PipeViewStatus.Spinning, color);
         }
 
         public void SoundUpdate()
@@ -121,10 +130,13 @@ namespace Pipe
             }
             else
             {
-                changeBgColor(Color.white);
+                SetPipeViewStatus(PipeViewStatus.ColdDown);
             }
 
-            if (triggerTimer <= triggerColdDown) triggerTimer += Time.deltaTime;
+            if (triggerTimer <= triggerColdDown)
+                triggerTimer += Time.deltaTime;
+            else
+                SetPipeViewStatus(PipeViewStatus.Normal);
         }
 
         public bool IsTrigger()
@@ -144,6 +156,46 @@ namespace Pipe
         }
 
         #region setter
+
+        private void SetPipeViewStatus(PipeViewStatus pipeViewStatus, Color color)
+        {
+            switch (pipeViewStatus)
+            {
+                case PipeViewStatus.Spinning:
+                    changeBgColor(color);
+                    _pipeViewStatus = PipeViewStatus.Spinning;
+                    RotateOverClock(true);
+                    break;
+                case PipeViewStatus.ColdDown:
+                    changeBgColor(color);
+                    _pipeViewStatus = PipeViewStatus.ColdDown;
+                    break;
+                case PipeViewStatus.Normal:
+                    changeBgColor(color);
+                    _pipeViewStatus = PipeViewStatus.Normal;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(pipeViewStatus), pipeViewStatus, null);
+            }
+        }
+
+        private void SetPipeViewStatus(PipeViewStatus pipeViewStatus)
+        {
+            switch (pipeViewStatus)
+            {
+                case PipeViewStatus.Spinning:
+                    SetPipeViewStatus(pipeViewStatus, Color.yellow);
+                    break;
+                case PipeViewStatus.ColdDown:
+                    SetPipeViewStatus(pipeViewStatus, Color.gray);
+                    break;
+                case PipeViewStatus.Normal:
+                    SetPipeViewStatus(pipeViewStatus, Color.white);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(pipeViewStatus), pipeViewStatus, null);
+            }
+        }
 
         public void SetGameManager(GameManager gameManager)
         {

@@ -85,6 +85,18 @@ namespace fft
 
         private void Update()
         {
+            // if (audioSource.time >= audioSource.clip.length)
+            // {
+            //     foreach (var pipe1D in _pipeGameObjects)
+            //     {
+            //         foreach (var pipe in pipe1D)
+            //         {
+            //             pipe.Get
+            //         }
+            //         
+            //     }
+            //     return;
+            // }
             for (var i = 0; i < _cdTimer.Count; i++) _cdTimer[i] += Time.deltaTime;
             var willRemove = new List<UnitPipeGameObject>();
             foreach (var pipe in _usedPipes)

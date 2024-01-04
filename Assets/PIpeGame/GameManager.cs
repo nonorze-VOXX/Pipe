@@ -43,8 +43,8 @@ namespace Pipe
                     var cameraSize = new Vector2(_camera.aspect, 1) * orthographicSize;
                     _camera.orthographicSize = GetCameraSize(pipeData.mapSize, pipeData.pipeSize, cameraSize,
                         _camera.aspect, pipeData.puzzleType);
-                    if (pipeData.GameWin)
-                        _gameFlow = GameFlow.WIN;
+                    // if (pipeData.GameWin)
+                    //     _gameFlow = GameFlow.WIN;
                     break;
                 case GameFlow.WIN:
 
