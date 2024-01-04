@@ -62,6 +62,9 @@ namespace fft
                     x += 2;
                     leds.Add(nCube.GetComponent<SpriteRenderer>());
                 }
+
+            audioSource.time = fFtConfig.startTime; // assuming that you already have reference to your AudioSource
+            audioSource.Play();
         }
 
         private void Update()

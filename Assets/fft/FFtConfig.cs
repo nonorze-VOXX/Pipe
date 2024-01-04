@@ -27,5 +27,6 @@ namespace fft
     public class FFtConfig : ScriptableObject
     {
         public List<FilterConfig> filterConfigs;
+        public float startTime;
     }
 }

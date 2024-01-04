@@ -37,3 +37,4 @@ MonoBehaviour:
     tolerance: 57.18
     cd: 0.1
     active: 0
+  startTime: 60

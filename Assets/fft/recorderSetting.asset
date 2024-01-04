@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: recorderSetting
   m_EditorClassIdentifier: 
   position: {x: 0, y: -55.7, z: 0}
-  maxPointNumber: 200
+  maxPointNumber: 1000
   upsideheight: 32
   downsideheight: 0
