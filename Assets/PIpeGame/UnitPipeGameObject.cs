@@ -55,6 +55,7 @@ namespace Pipe
             _pipeLine = new List<GameObject>();
             _pipeLine.Add(transform.GetChild(1).GameObject());
             _pipeEnd = transform.GetChild(0).GameObject();
+            SetPipeViewStatus(PipeViewStatus.Normal);
         }
 
         private void Start()
@@ -127,16 +128,15 @@ namespace Pipe
                 var rotation = transform.rotation.eulerAngles;
                 rotation.z = Mathf.Lerp(_fromAngle, _toAngle, timePercent);
                 transform.rotation = Quaternion.Euler(rotation);
-            }
-            else
-            {
-                SetPipeViewStatus(PipeViewStatus.ColdDown);
+                if (spinTimer >= spinTime) SetPipeViewStatus(PipeViewStatus.ColdDown);
             }
 
             if (triggerTimer <= triggerColdDown)
+            {
                 triggerTimer += Time.deltaTime;
-            else
-                SetPipeViewStatus(PipeViewStatus.Normal);
+                if (triggerTimer > triggerColdDown)
+                    SetPipeViewStatus(PipeViewStatus.Normal);
+            }
         }
 
         public bool IsTrigger()
@@ -144,15 +144,16 @@ namespace Pipe
             return triggerTimer <= triggerColdDown;
         }
 
+        public void ChangeOneBgColor(Color color)
+        {
+            for (var i = 0; i < _childSprites.Count; i++) _childSprites[i].color = color;
+        }
+
         private void changeBgColor(Color color)
         {
             for (var i = 0; i < _childSprites.Count; i++) _childSprites[i].color = color;
         }
 
-        public void ChangeOneBgColor(Color color)
-        {
-            _childSprites[0].color = color;
-        }
 
         public void RotateOverClock(bool b)
         {

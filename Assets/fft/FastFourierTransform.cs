@@ -29,7 +29,6 @@ namespace fft
         private readonly float[] samples = new float[512];
         private UnitPipeGameObject _AOECenter;
         private List<float> _cdTimer;
-        private List<Color> _colors;
         private List<LastState> _filterLastStates;
         private List<Vector2> _neighbor;
 
@@ -43,11 +42,6 @@ namespace fft
 
         private void Start()
         {
-            _colors = new List<Color>();
-            _colors.Add(Color.red);
-            _colors.Add(Color.green);
-            _colors.Add(Color.blue);
-            _colors.Add(Color.yellow);
             audioSource = GetComponent<AudioSource>();
             cubeSprite = cube.GetComponent<SpriteRenderer>();
             if (cubeShow)
@@ -143,7 +137,7 @@ namespace fft
                             leds[index].color = Color.white;
                     if (_pipeGameObjects != null)
                         if (trigger)
-                            SpinPipe(_pipeGameObjects, _filterLastStates, _colors, index, filter);
+                            SpinPipe(_pipeGameObjects, _filterLastStates, index, filter);
                 }
 
                 index++;
@@ -156,8 +150,10 @@ namespace fft
             {
                 AOETimer += 1;
                 var list = FindPipeByDistance(_AOECenter, AOETimer);
-                foreach (var pipe in list) pipe.Trigger(AOEColor);
-                // foreach (var pipe in list) pipe.ChangeOneBgColor(AOEColor);
+                //foreach (var pipe in list) pipe.Trigger(AOEColor);
+                foreach (var pipe in list) pipe.ChangeOneBgColor(AOEColor);
+                list = FindPipeByDistance(_AOECenter, AOETimer - 1);
+                foreach (var pipe in list) pipe.ChangeOneBgColor(Color.white);
                 if (AOETimer >= _pipeGameObjects.Count * 2) _AOECenter = null;
                 ;
             }
@@ -210,8 +206,8 @@ namespace fft
             }
         }
 
-        private void SpinPipe(List<List<UnitPipeGameObject>> pipeGameObjects, List<LastState> filterLastTime,
-            List<Color> color, int index, FilterConfig filterConfig)
+        private void SpinPipe(List<List<UnitPipeGameObject>> pipeGameObjects, List<LastState> filterLastTime
+            , int index, FilterConfig filterConfig)
         {
             var lastState = filterLastTime[index];
             var filterDeltaTime = Time.time - lastState.time;
@@ -284,8 +280,8 @@ namespace fft
                     if (_AOECenter != null) return;
                     var ran = Random.Range(0, _unusedPipes.Count);
                     var pipe = _unusedPipes[ran];
-                    AOEColor = _colors[index];
-                    pipe.ChangeOneBgColor(_colors[index]);
+                    AOEColor = filterConfig.color;
+                    pipe.ChangeOneBgColor(filterConfig.color);
                     _AOECenter = pipe;
                     AOETimer = 0;
                     return;
@@ -296,7 +292,7 @@ namespace fft
 
             _unusedPipes.Remove(nextPipe);
             _usedPipes.Add(nextPipe);
-            nextPipe.Trigger(color[index]);
+            nextPipe.Trigger(filterConfig.color);
             lastState.position = nextPipe.transform.position;
 
 

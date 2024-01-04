@@ -29,6 +29,7 @@ namespace fft
         public float cd;
         public bool active;
         public ShowType showType;
+        public Color color;
     }
 
     [CreateAssetMenu(fileName = "fftConfig", menuName = "fftConfig", order = 0)]
