@@ -34,6 +34,7 @@ namespace Pipe
         private PuzzleType _puzzleType;
 
         private float _toAngle;
+        private float spinTimer = float.MaxValue;
 
         private float triggerTimer = float.MaxValue;
         // private int rotationTimes;
@@ -58,9 +59,10 @@ namespace Pipe
                 _pipeLine.Add(line);
             }
 
-            for (var i = 1; i < transform.childCount; i++)
+            var count = transform.childCount;
+            for (var i = 1; i < count; i++)
                 _childSprites.Add(
-                    transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<SpriteRenderer>());
+                    transform.GetChild(i).GetChild(1).GetChild(0).GetComponent<SpriteRenderer>());
 
             var index = 1;
             foreach (var up in _originUnitPipe.GetNeighbor())
@@ -99,6 +101,7 @@ namespace Pipe
         public void Trigger(Color color)
         {
             triggerTimer = 0;
+            spinTimer = 0;
             _fromAngle = transform.rotation.eulerAngles.z;
             _toAngle = transform.rotation.eulerAngles.z + 360.0f / _originUnitPipe.GetNeighbor().Count;
             ;
@@ -108,10 +111,10 @@ namespace Pipe
 
         public void SoundUpdate()
         {
-            if (triggerTimer <= triggerColdDown)
+            if (spinTimer <= spinTime)
             {
-                triggerTimer += Time.deltaTime;
-                var timePercent = triggerTimer / spinTime;
+                spinTimer += Time.deltaTime;
+                var timePercent = spinTimer / spinTime;
                 var rotation = transform.rotation.eulerAngles;
                 rotation.z = Mathf.Lerp(_fromAngle, _toAngle, timePercent);
                 transform.rotation = Quaternion.Euler(rotation);
@@ -120,6 +123,8 @@ namespace Pipe
             {
                 changeBgColor(Color.white);
             }
+
+            if (triggerTimer <= triggerColdDown) triggerTimer += Time.deltaTime;
         }
 
         public bool IsTrigger()

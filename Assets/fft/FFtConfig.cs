@@ -20,6 +20,7 @@ namespace fft
         public FilterType type;
         public float tolerance;
         public float cd;
+        public bool active;
     }
 
     [CreateAssetMenu(fileName = "fftConfig", menuName = "fftConfig", order = 0)]

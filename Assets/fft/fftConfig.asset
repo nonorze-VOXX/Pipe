@@ -19,18 +19,21 @@ MonoBehaviour:
     threshold: 37
     type: 1
     tolerance: 21.67
-    cd: 0.05
+    cd: 0
+    active: 1
   - endIndex: 3
     name: drum
     startIndex: 0
     threshold: 250
     type: 0
     tolerance: 10
-    cd: 0
+    cd: 0.1
+    active: 0
   - endIndex: 6
     name: big drum
     startIndex: 0
-    threshold: 180
+    threshold: 130.4
     type: 1
-    tolerance: 10
-    cd: 0
+    tolerance: 57.18
+    cd: 0.1
+    active: 0

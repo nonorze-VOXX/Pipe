@@ -12,6 +12,7 @@ namespace fft
         public GameObject cube;
         public FFtConfig fFtConfig;
         public bool cubeShow;
+        public Recorder recorder;
         private readonly List<GameObject> cubes = new();
         private readonly List<SpriteRenderer> leds = new();
         private readonly float[] samples = new float[512];
@@ -77,34 +78,39 @@ namespace fft
                 }
 
             var index = 0;
-            for (var i = 0; i < 1; i++) // fFtConfig.filterConfigs.Count; i++)
+            for (var i = 0; i < fFtConfig.filterConfigs.Count; i++)
             {
                 var filter = fFtConfig.filterConfigs[i];
-                var targetList = samples.Skip(filter.startIndex).Take(filter.endIndex);
-                float result;
-                switch (filter.type)
+                if (filter.active)
                 {
-                    case FilterType.sum:
-                        result = targetList.Sum();
-                        break;
-                    case FilterType.max:
-                        result = targetList.Max();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    var targetList = samples.Skip(filter.startIndex).Take(filter.endIndex);
+                    float result;
+                    switch (filter.type)
+                    {
+                        case FilterType.sum:
+                            result = targetList.Sum();
+                            break;
+                        case FilterType.max:
+                            result = targetList.Max();
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+
+                    var trigger = IsTrigger(i, result, filter, _cdTimer[i]);
+                    recorder.Record(trigger);
+                    if (trigger) _cdTimer[i] = 0;
+                    if (cubeShow)
+                        if (trigger)
+                            leds[index].color = Color.red;
+                        else
+                            leds[index].color = Color.white;
+                    if (_pipeGameObjects != null)
+                        if (trigger)
+                            SpinPipe(_pipeGameObjects, _colors[index]);
                 }
 
-
-                var trigger = IsTrigger(i, result, filter, _cdTimer[i]);
-                if (trigger) _cdTimer[i] = 0;
-                if (cubeShow)
-                    if (trigger)
-                        leds[index].color = Color.red;
-                    else
-                        leds[index].color = Color.white;
-                if (_pipeGameObjects != null)
-                    if (trigger)
-                        SpinPipe(_pipeGameObjects, _colors[index]);
                 index++;
             }
         }
@@ -114,10 +120,10 @@ namespace fft
             var nowVolumn = result * 1000;
             if (_trigger[i])
             {
-                var leftTrigger = nowVolumn < filter.threshold * (1 + filter.tolerance / 100);
+                //var leftTrigger = nowVolumn < filter.threshold * (1 + filter.tolerance / 100);
                 var rightTrigger = nowVolumn > filter.threshold * (1 - filter.tolerance / 100);
-                _trigger[i] = leftTrigger && rightTrigger;
-                return false;
+                _trigger[i] = rightTrigger;
+                return _trigger[i];
             }
 
             if (timer < filter.cd)
