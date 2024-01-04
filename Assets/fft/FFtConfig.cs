@@ -11,18 +11,20 @@ namespace fft
     }
 
     [Serializable]
-    public struct filterConfig
+    public struct FilterConfig
     {
         public int endIndex;
         public string name;
         public int startIndex;
         public float threshold;
         public FilterType type;
+        public float tolerance;
+        public float cd;
     }
 
     [CreateAssetMenu(fileName = "fftConfig", menuName = "fftConfig", order = 0)]
     public class FFtConfig : ScriptableObject
     {
-        public List<filterConfig> filterConfigs;
+        public List<FilterConfig> filterConfigs;
     }
 }

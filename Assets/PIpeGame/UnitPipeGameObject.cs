@@ -22,7 +22,8 @@ namespace Pipe
 
     public class UnitPipeGameObject : MonoBehaviour, ISoundTriggerable
     {
-        private readonly float triggerColdDown = 0.1f;
+        private readonly float spinTime = 0.1f;
+        private readonly float triggerColdDown = 5f;
         private List<SpriteRenderer> _childSprites;
         private float _fromAngle;
         private GameManager _gameManager;
@@ -57,8 +58,9 @@ namespace Pipe
                 _pipeLine.Add(line);
             }
 
-            for (var i = 0; i < transform.childCount; i++)
-                _childSprites.Add(transform.GetChild(i).transform.GetChild(0).GetComponent<SpriteRenderer>());
+            for (var i = 1; i < transform.childCount; i++)
+                _childSprites.Add(
+                    transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<SpriteRenderer>());
 
             var index = 1;
             foreach (var up in _originUnitPipe.GetNeighbor())
@@ -109,7 +111,7 @@ namespace Pipe
             if (triggerTimer <= triggerColdDown)
             {
                 triggerTimer += Time.deltaTime;
-                var timePercent = triggerTimer / triggerColdDown;
+                var timePercent = triggerTimer / spinTime;
                 var rotation = transform.rotation.eulerAngles;
                 rotation.z = Mathf.Lerp(_fromAngle, _toAngle, timePercent);
                 transform.rotation = Quaternion.Euler(rotation);
@@ -127,7 +129,7 @@ namespace Pipe
 
         private void changeBgColor(Color color)
         {
-            for (var i = 1; i < _childSprites.Count; i++) _childSprites[i].color = color;
+            for (var i = 0; i < _childSprites.Count; i++) _childSprites[i].color = color;
         }
 
 

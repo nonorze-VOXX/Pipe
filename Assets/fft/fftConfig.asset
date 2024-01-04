@@ -15,16 +15,22 @@ MonoBehaviour:
   filterConfigs:
   - endIndex: 100
     name: main
-    startIndex: 12
-    threshold: 40
+    startIndex: 14
+    threshold: 37
     type: 1
+    tolerance: 21.67
+    cd: 0.05
   - endIndex: 3
     name: drum
     startIndex: 0
     threshold: 250
     type: 0
+    tolerance: 10
+    cd: 0
   - endIndex: 6
     name: big drum
     startIndex: 0
     threshold: 180
     type: 1
+    tolerance: 10
+    cd: 0

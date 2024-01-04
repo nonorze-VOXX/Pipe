@@ -15,15 +15,18 @@ namespace fft
         private readonly List<GameObject> cubes = new();
         private readonly List<SpriteRenderer> leds = new();
         private readonly float[] samples = new float[512];
+        private List<float> _cdTimer;
         private List<Color> _colors;
 
         private List<List<UnitPipeGameObject>> _pipeGameObjects;
+        private List<bool> _trigger;
         private AudioSource audioSource;
 
         private SpriteRenderer cubeSprite;
 
         private void Start()
         {
+            cubeShow = true;
             _colors = new List<Color>();
             _colors.Add(Color.red);
             _colors.Add(Color.green);
@@ -41,6 +44,14 @@ namespace fft
 
             var x = 0;
             var y = -2;
+            _trigger = new List<bool>();
+            _cdTimer = new List<float>();
+            foreach (var filter in fFtConfig.filterConfigs)
+            {
+                _trigger.Add(false);
+                _cdTimer.Add(0);
+            }
+
             if (cubeShow)
                 foreach (var filter in fFtConfig.filterConfigs)
                 {
@@ -54,6 +65,8 @@ namespace fft
 
         private void Update()
         {
+            for (var i = 0; i < _cdTimer.Count; i++) _cdTimer[i] += Time.deltaTime;
+
             GetAudio();
             if (cubeShow)
                 for (var i = 0; i < samples.Length; i++)
@@ -64,8 +77,9 @@ namespace fft
                 }
 
             var index = 0;
-            foreach (var filter in fFtConfig.filterConfigs)
+            for (var i = 0; i < 1; i++) // fFtConfig.filterConfigs.Count; i++)
             {
+                var filter = fFtConfig.filterConfigs[i];
                 var targetList = samples.Skip(filter.startIndex).Take(filter.endIndex);
                 float result;
                 switch (filter.type)
@@ -81,17 +95,38 @@ namespace fft
                 }
 
 
+                var trigger = IsTrigger(i, result, filter, _cdTimer[i]);
+                if (trigger) _cdTimer[i] = 0;
                 if (cubeShow)
-                    if (result * 1000 > filter.threshold)
+                    if (trigger)
                         leds[index].color = Color.red;
                     else
                         leds[index].color = Color.white;
                 if (_pipeGameObjects != null)
-                    if (result * 1000 > filter.threshold)
+                    if (trigger)
                         SpinPipe(_pipeGameObjects, _colors[index]);
                 index++;
             }
         }
+
+        private bool IsTrigger(int i, float result, FilterConfig filter, float timer)
+        {
+            var nowVolumn = result * 1000;
+            if (_trigger[i])
+            {
+                var leftTrigger = nowVolumn < filter.threshold * (1 + filter.tolerance / 100);
+                var rightTrigger = nowVolumn > filter.threshold * (1 - filter.tolerance / 100);
+                _trigger[i] = leftTrigger && rightTrigger;
+                return false;
+            }
+
+            if (timer < filter.cd)
+                _trigger[i] = false;
+            else
+                _trigger[i] = nowVolumn > filter.threshold;
+            return _trigger[i];
+        }
+
 
         private void SpinPipe(List<List<UnitPipeGameObject>> pipeGameObjects, Color color)
         {
