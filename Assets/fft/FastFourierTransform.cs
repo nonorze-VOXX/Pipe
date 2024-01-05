@@ -107,8 +107,8 @@ namespace fft
                 {
                     foreach (var pipe1d in _pipeGameObjects)
                     foreach (var pipe in pipe1d)
-                        while (pipe.GetDir() != 0)
-                            pipe.RotateOverClock(true);
+                        pipe.TriggerEnd(Color.red, pipe.GetPuzzleType() - pipe.GetDir());
+
 
                     fFtConfig.saved = true;
                 }

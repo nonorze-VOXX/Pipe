@@ -151,6 +151,15 @@ namespace Pipe
             return triggerTimer <= triggerColdDown;
         }
 
+        public void TriggerEnd(Color color, int times)
+        {
+            triggerTimer = 0;
+            spinTimer = 0;
+            _fromAngle = transform.rotation.eulerAngles.z;
+            _toAngle = transform.rotation.eulerAngles.z + 360.0f / _originUnitPipe.GetNeighbor().Count * times;
+            SetPipeViewStatus(PipeViewStatus.Spinning, color);
+        }
+
         public void ChangeOneBgColor(Color color)
         {
             for (var i = 0; i < _bgChildSprites.Count; i++) _bgChildSprites[i].color = color;
