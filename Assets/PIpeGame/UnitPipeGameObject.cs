@@ -46,6 +46,7 @@ namespace Pipe
         private PuzzleType _puzzleType;
 
         private float _toAngle;
+        private int dir;
         private float spinTimer = float.MaxValue;
 
         private float triggerTimer = float.MaxValue;
@@ -163,7 +164,23 @@ namespace Pipe
 
         public void RotateOverClock(bool b)
         {
+            if (b)
+                dir++;
+            else
+                dir--;
+
+            dir %= _originUnitPipe.GetNeighbor().Count;
             _originUnitPipe.RotateOverClock(b);
+        }
+
+        public int GetPuzzleType()
+        {
+            return _originUnitPipe.GetNeighbor().Count;
+        }
+
+        public int GetDir()
+        {
+            return dir;
         }
 
         #region setter

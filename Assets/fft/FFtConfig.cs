@@ -35,6 +35,7 @@ namespace fft
     [CreateAssetMenu(fileName = "fftConfig", menuName = "fftConfig", order = 0)]
     public class FFtConfig : ScriptableObject
     {
+        public bool saved;
         public List<FilterConfig> filterConfigs;
         public float startTime;
     }

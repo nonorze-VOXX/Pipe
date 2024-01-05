@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff73cb922b374787811a351dadf57021, type: 3}
   m_Name: fftConfig
   m_EditorClassIdentifier: 
+  saved: 1
   filterConfigs:
   - endIndex: 100
     name: main

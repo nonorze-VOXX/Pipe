@@ -110,7 +110,7 @@ namespace Pipe
             _pipe2D = GenerateMap(_pipe2D, init, pipeData.puzzleType);
             _waterSource = init;
 
-            UnitPipeToGameObject(true);
+            UnitPipeToGameObject(false);
             fft.SetPipeGameObjects(_pipeGameObjects);
             fft.SetPuzzleType(pipeData.puzzleType);
 

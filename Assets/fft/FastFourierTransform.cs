@@ -80,10 +80,43 @@ namespace fft
 
             audioSource.time = fFtConfig.startTime; // assuming that you already have reference to your AudioSource
             audioSource.Play();
+
+            if (fFtConfig.saved)
+            {
+                var dir2s2 = SaveList.Load();
+                for (var i = 0; i < _pipeGameObjects.Count; i++)
+                {
+                    var pipe1d = _pipeGameObjects[i];
+                    for (var ii = 0; ii < pipe1d.Count; ii++)
+                    {
+                        var pipe = pipe1d[ii];
+                        for (var iii = 0; iii < pipe.GetPuzzleType() - dir2s2[i][ii]; iii++) pipe.RotateOverClock(true);
+                    }
+                }
+            }
         }
 
         private void Update()
         {
+            if (!audioSource.isPlaying)
+            {
+                if (!fFtConfig.saved)
+                {
+                    var dir2d = new List<List<int>>();
+                    foreach (var pipe1d in _pipeGameObjects)
+                    {
+                        var dir1d = new List<int>();
+                        foreach (var pipe in pipe1d) dir1d.Add(pipe.GetDir());
+                        dir2d.Add(dir1d);
+                    }
+
+                    SaveList.Save(dir2d);
+                    fFtConfig.saved = true;
+                }
+
+                return;
+            }
+
             UpdateAOE();
             for (var i = 0; i < _cdTimer.Count; i++) _cdTimer[i] += Time.deltaTime;
             var willRemove = new List<UnitPipeGameObject>();
@@ -229,6 +262,7 @@ namespace fft
                     }
                     else
                     {
+                        Random.InitState(100);
                         var random = Random.Range(0, _unusedPipes.Count);
                         nextPipe = _unusedPipes[random];
                     }
@@ -237,6 +271,7 @@ namespace fft
                 case ShowType.slide:
                     if (filterDeltaTime > 1f)
                     {
+                        Random.InitState(100);
                         var random = Random.Range(0, _unusedPipes.Count);
                         nextPipe = _unusedPipes[random];
                         random = Random.Range(0, _unusedPipes.Count);
@@ -278,6 +313,7 @@ namespace fft
                     break;
                 case ShowType.AOE:
                     if (_AOECenter != null) return;
+                    Random.InitState(100);
                     var ran = Random.Range(0, _unusedPipes.Count);
                     var pipe = _unusedPipes[ran];
                     AOEColor = filterConfig.color;
