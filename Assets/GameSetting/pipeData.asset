@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: pipeData
   m_EditorClassIdentifier: 
   mapSize: {x: 20, y: 20}
-  puzzleType: 4
+  puzzleType: 6
   boardLeftDown: {x: 0, y: 0, z: 0}
   pipeSize: {x: 1, y: 1, z: 0}
   GameWin: 0

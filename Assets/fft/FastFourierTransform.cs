@@ -373,5 +373,12 @@ namespace fft
             foreach (var pipe in pipe1d)
                 _unusedPipes.Add(pipe);
         }
+
+        public void ButtonClick(int i)
+        {
+            var tmp = fFtConfig.filterConfigs[i];
+            tmp.active = !fFtConfig.filterConfigs[i].active;
+            fFtConfig.filterConfigs[i] = tmp;
+        }
     }
 }
